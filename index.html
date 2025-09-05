@@ -6,20 +6,23 @@
     <title>Prestamax - Créditos Hipotecarios y para Colaboradores</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">      
 </head>
 <body>
     <!-- Header -->
     <header>
         <div class="container header-container">
             <div class="logo">
-                <div class="logo-text">Presta<span>Max</span></div>
+                <div class="logo-text"><img src="images/logo.svg" alt="logo de Prestamax" width="394px" height="94px"> </div>
             </div>
             <nav>
                 <ul>
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#productos">Productos</a></li>
                     <li><a href="#requisitos">Requisitos</a></li>
-                    <li><a href="#calculadora">Calculadora</a></li>
+                    <li><a href="#calculadora-titulo">Calculadora</a></li>
                     <li><a href="#nosotros">Nosotros</a></li>
                     <li><a href="#contacto">Contacto</a></li>
                 </ul>
@@ -41,7 +44,7 @@
         <div class="container">
             <div class="section-title">
                 <h2>Nuestros Productos Financieros</h2>
-                <p>Ofrecemos dos tipos de crédito adaptados a tus necesidades específicas</p>
+                <p>Ofrecemos dos tipos de crédito adaptados a tus necesidades específicas</p><br>
             </div>
             
             <div class="product-cards">
@@ -86,7 +89,7 @@
     <section class="benefits">
         <div class="container">
             <div class="section-title">
-                <h2>Beneficios de Elegir Prestamax</h2>
+                <h2>Beneficios de Elegir Prestamax</h2><br>
                 <p>Porque nos preocupamos por tu bienestar financiero</p>
             </div>
             
@@ -135,7 +138,7 @@
         <div class="container">
             <div class="section-title">
                 <h2>Requisitos para Solicitar tu Crédito</h2>
-                <p>Conoce los documentos necesarios según tu perfil profesional</p>
+                <p>Conoce los documentos necesarios según tu perfil profesional</p> 
             </div>
             
             <div class="requirements-tabs">
@@ -199,48 +202,55 @@
     </section>
 
     <!-- Calculator Section -->
-    <section class="calculator" id="calculadora">
+    <section class="calculator-titulo" id="calculadora-titulo">
         <div class="container">
             <div class="section-title">
-                <h2>Calcula tu Cuota Mensual</h2>
-                <p>Simula las cuotas de tu préstamo hipotecario con nuestra calculadora</p>
-            </div>
-            
-            <div class="calculator-container">
-                <div class="calculator-form">
-                    <div class="form-group">
-                        <label for="monto">Monto del préstamo (USD)</label>
-                        <input type="number" id="monto" min="1000" max="100000" step="1000" value="10000">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="plazo">Plazo (meses)</label>
-                        <input type="range" id="plazo" min="12" max="60" step="12" value="60">
-                        <span id="plazo-value">60 meses</span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="tasa">Tasa de interés anual</label>
-                        <input type="text" id="tasa" value="12%" readonly>
-                    </div>
-                </div>
-                
-                <div class="calculator-result">
-                    <h3>Tu cuota mensual sería:</h3>
-                    <div class="monthly-payment" id="cuota">$222.44 USD</div>
-                    <p>* Cálculo aproximado sujeto a verificación y aprobación.</p>
-                    <a href="#contacto" class="btn">Solicitar ahora</a>
-                </div>
+                <h2>Calculadora de Préstamos</h2>
+                <p>Calcula tu cuota mensual aproximada según el tipo de préstamo, monto y plazo</p>
             </div>
         </div>
     </section>
+        <div class="calculator-container">
+    <div class="calculator-form">
+        <div class="form-group">
+            <label for="tipo-prestamo">Tipo de préstamo</label>
+            <select id="tipo-prestamo">
+                <option value="hipotecario">Préstamo Hipotecario (12%) Anual</option>
+                <option value="colaboradores">Préstamo Colaboradores (24%)Anual</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="monto">Monto del préstamo (USD)</label>
+            <input type="number" id="monto" min="1000" max="100000" step="1000" value="10000">
+        </div>
+        
+        <div class="form-group">
+            <label for="plazo">Plazo (meses)</label>
+            <input type="range" id="plazo" min="12" max="60" step="12" value="60">
+            <span id="plazo-value">60 meses</span>
+        </div>
+        
+        <div class="form-group"> <!----
+            <label for="tasa">Tasa de interés anual</label>
+            <input type="text" id="tasa" value="12%" readonly> -->
+        </div>
+    </div>
+    
+    <div class="calculator-result">
+        <h3 style="color:white;">Tu cuota mensual sería:</h3>
+        <div class="monthly-payment" id="cuota">$222.44 USD</div>
+        <p style="color: white;">* Cálculo aproximado sujeto a verificación y aprobación.</p> <br>
+        <a href="#contacto" class="btn">Solicitar ahora</a>
+    </div>
+</div>
 
     <!-- About Section -->
     <section class="about" id="nosotros">
         <div class="container">
             <div class="section-title">
                 <h2>Nuestra Historia</h2>
-                <p>Más de 10 años ayudando a las familias nicaragüenses</p>
+                <h4>Más de 10 años ayudando a las familias nicaragüenses</h4><br>
             </div>
             
             <div class="about-content">
@@ -280,7 +290,7 @@
         <div class="container">
             <div class="section-title">
                 <h2>Contacto</h2>
-                <p>¿Listo para hacer realidad tu proyecto? Contáctanos</p>
+                <p>¿Listo para hacer realidad tu proyecto? Contáctanos</p><br>
             </div>
             
             <div class="contact-container">
@@ -352,11 +362,17 @@
             </div>
             
             <div class="copyright">
-                <p>&copy; 2023 Prestamax - Todos los derechos reservados</p>
+                <p>&copy; 
+            <script>
+                document.write(new Date().getFullYear());
+            </script> 
+    Prestamax - Todos los derechos reservados
+</p>
             </div>
         </div>
     </footer>
 
     <script src="script.js"></script>
+    <script src="tab.js"></script>
 </body>
 </html>

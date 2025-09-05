@@ -1,5 +1,5 @@
 :root {
-    --primary: #27ae60; /* Verde principal */
+    --primary: #44ad4d; /* Verde principal */
     --secondary: #2ecc71; /* Verde secundario */
     --accent: #f39c12; /* Naranja para acentos */
     --light: #ecf0f1;
@@ -7,13 +7,28 @@
     --success: #27ae60;
     --text: #333;
     --white: #ffffff;
+    --font-primary: 'Montserrat', sans-serif;
+    --font-secondary: 'Open Sans', sans-serif;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-secondary);   
+}
+
+
+h1, h2, h3, h4, h5, h6, .logo-text, p, .btn {
+    font-family: var(--font-primary);
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+.hero h1 {
+    font-weight: 700;
 }
 
 body {
@@ -72,8 +87,9 @@ nav ul li {
 nav ul li a {
     text-decoration: none;
     color: var(--dark);
-    font-weight: 500;
+    font-weight: 700;
     transition: color 0.3s;
+    font-family: var(--font-primary);
 }
 
 nav ul li a:hover {
@@ -82,29 +98,36 @@ nav ul li a:hover {
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+    background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('images/hero2git.jpg') no-repeat center center/cover;
     background-size: cover;
     background-position: center;
     color: white;
-    padding: 100px 0;
-    text-align: center;
+    padding: 180px 0;
+    text-align: left;
 }
 
 .hero h1 {
     font-size: 2.5rem;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    margin-left: 0px;
+    text-align: left;
+    font-family: var(--font-primary);
+    color: #595a5c
 }
 
 .hero p {
     font-size: 1.2rem;
     max-width: 700px;
-    margin: 0 auto 30px;
+    margin: 22px 10px 30px 0px;
+    text-align: left;
+    font-family: var(--font-primary);
+    color: #595a5c;
 }
 
 .btn {
     display: inline-block;
-    background-color: var(--primary);
-    color: white;
+    background-color: white;
+    color: black;
     padding: 12px 30px;
     border-radius: 5px;
     text-decoration: none;
@@ -116,6 +139,7 @@ nav ul li a:hover {
 
 .btn:hover {
     background-color: var(--secondary);
+    color: whitesmoke;
 }
 
 /* Sections */
@@ -180,12 +204,14 @@ section {
 .product-body ul {
     list-style: none;
     margin: 15px 0;
+    font-family: var(--font-primary);
 }
 
 .product-body ul li {
     margin-bottom: 10px;
     padding-left: 20px;
     position: relative;
+    font-family: var(--font-primary);
 }
 
 .product-body ul li:before {
@@ -201,6 +227,7 @@ section {
     font-weight: bold;
     text-align: center;
     margin: 15px 0;
+    font-family: var(--font-primary);
 }
 
 /* Benefits */
@@ -289,14 +316,22 @@ section {
 /* Calculator */
 .calculator {
     background: linear-gradient(to right, var(--primary), var(--secondary));
-    color: white;
+    color: #44ad4d;
+}
+.section-title{
+    margin: auto;
 }
 
 .calculator-container {
     display: flex;
+    border-radius: 15px;
     flex-wrap: wrap;
     gap: 30px;
-    justify-content: center;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    max-width: 1000px; /* Ancho máximo opcional */
+    margin: 0 auto; /* Centra el contenedor completo */
+    background-color: #44ad4d;
 }
 
 .calculator-form {
@@ -315,6 +350,15 @@ section {
 .form-group label {
     display: block;
     margin-bottom: 8px;
+    color: whitesmoke;
+}
+#tipo-prestamo {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: white;
+    color: var(--dark);
 }
 
 .form-group input {
@@ -334,10 +378,20 @@ section {
     text-align: center;
 }
 
+
 .monthly-payment {
     font-size: 2.5rem;
     font-weight: bold;
     margin: 20px 0;
+    color: white;
+}
+
+#plazo-value {
+    display: block;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 5px;
+    color: white;
 }
 
 /* About */
@@ -351,6 +405,8 @@ section {
 .about-text {
     flex: 1;
     min-width: 300px;
+    font-family: var(--font-primary);
+    text-align: justify;
 }
 
 .about-stats {
@@ -358,6 +414,7 @@ section {
     min-width: 300px;
     display: flex;
     justify-content: center;
+    font-family: var(--font-primary);
     flex-wrap: wrap;
     gap: 20px;
 }
@@ -370,6 +427,7 @@ section {
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     width: 150px;
     transition: transform 0.3s;
+    font-family: var(--font-primary);
 }
 
 .stat-box:hover {
@@ -380,9 +438,14 @@ section {
     font-size: 2rem;
     font-weight: bold;
     color: var(--primary);
-    margin-bottom: 5px;
+    margin-bottom: 5px;.
+    font-family: var(--font-primary);
 }
 
+.stat-text {
+    color: #666;
+    font-family: var(--font-primary);
+}
 /* Contact */
 .contact {
     background-color: var(--light);
@@ -513,3 +576,73 @@ footer {
         flex-direction: column;
     }
 }
+/*calculator form adjustments*/
+/*
+.calculator-form {
+    flex: 1;
+    min-width: 300px;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 30px;
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: white;
+}
+
+.form-group input, 
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: white;
+    color: var(--dark);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: 2px solid var(--accent);
+}
+
+/* Estilo específico para el range input 
+.form-group input[type="range"] {
+    height: 8px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+    margin: 10px 0;
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#plazo-value {
+    display: block;
+    text-align: center;
+    font-weight: 600;
+    margin-top: 5px;
+    color: white;
+}
+
+/* Estilo para el input de tasa (readonly) 
+.form-group input[readonly] {
+    background-color: rgba(255, 255, 255, 0.8);
+    font-weight: bold;
+    text-align: center;
+}*/

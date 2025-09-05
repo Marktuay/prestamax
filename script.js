@@ -1,70 +1,61 @@
+
 // Calculator functionality
 const montoInput = document.getElementById('monto');
 const plazoInput = document.getElementById('plazo');
 const plazoValue = document.getElementById('plazo-value');
+const tipoPrestamoSelect = document.getElementById('tipo-prestamo');
+const tasaInteresText = document.getElementById('tasa');
 const cuotaElement = document.getElementById('cuota');
 
+// Actualizar la tasa de interés según el tipo de préstamo
+function actualizarTasa() {
+    const tipoPrestamo = tipoPrestamoSelect.value;
+    let tasaAnual = 0.12; // Por defecto hipotecario 12%
+    
+    if (tipoPrestamo === 'colaboradores') {
+        tasaAnual = 0.24; // Colaboradores 24%
+    }
+    
+    tasaInteresText.value = `${(tasaAnual * 100).toFixed(0)}%`;
+    calculateMonthlyPayment();
+}
+
+// Calcular pago mensual
 function calculateMonthlyPayment() {
     const principal = parseFloat(montoInput.value);
     const months = parseInt(plazoInput.value);
-    const annualRate = 0.12; // 12%
+    const tipoPrestamo = tipoPrestamoSelect.value;
+    
+    let annualRate = 0.12; // Hipotecario por defecto
+    if (tipoPrestamo === 'colaboradores') {
+        annualRate = 0.24; // Colaboradores
+    }
+    
     const monthlyRate = annualRate / 12;
     
-    // Calculate monthly payment using formula: P * r * (1+r)^n / ((1+r)^n - 1)
+    // Calcular pago mensual: P * r * (1+r)^n / ((1+r)^n - 1)
     const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1);
     
     cuotaElement.textContent = `$${monthlyPayment.toFixed(2)} USD`;
 }
 
-montoInput.addEventListener('input', calculateMonthlyPayment);
+// Validar monto mínimo y máximo
+function validarMonto() {
+    let valor = parseFloat(montoInput.value);
+    if (valor < 1000) montoInput.value = 1000;
+    if (valor > 100000) montoInput.value = 100000;
+    calculateMonthlyPayment();
+}
 
+// Event listeners
+montoInput.addEventListener('input', calculateMonthlyPayment);
+montoInput.addEventListener('change', validarMonto);
 plazoInput.addEventListener('input', function() {
     plazoValue.textContent = `${this.value} meses`;
     calculateMonthlyPayment();
 });
+tipoPrestamoSelect.addEventListener('change', actualizarTasa);
 
-// Initial calculation
+// Inicializar cálculo
+actualizarTasa();
 calculateMonthlyPayment();
-
-// Tab functionality for requirements
-const tabBtns = document.querySelectorAll('.tab-btn');
-const tabContents = document.querySelectorAll('.tab-content');
-
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-        const tabId = this.getAttribute('data-tab');
-        
-        // Remove active class from all buttons and contents
-        tabBtns.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        
-        // Add active class to clicked button and corresponding content
-        this.classList.add('active');
-        document.getElementById(tabId).classList.add('active');
-    });
-});
-
-// Form submission
-document.getElementById('infoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    alert('¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.');
-    this.reset();
-});
-
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        
-        const targetId = this.getAttribute('href');
-        if (targetId === '#') return;
-        
-        const targetElement = document.querySelector(targetId);
-        if (targetElement) {
-            window.scrollTo({
-                top: targetElement.offsetTop - 80,
-                behavior: 'smooth'
-            });
-        }
-    });
-});

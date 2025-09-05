@@ -1,0 +1,26 @@
+<!-- En la sección de la calculadora, modifica el formulario: -->
+<div class="calculator-form">
+    <div class="form-group">
+        <label for="tipo-prestamo">Tipo de préstamo</label>
+        <select id="tipo-prestamo">
+            <option value="hipotecario">Préstamo Hipotecario (12%)</option>
+            <option value="colaboradores">Préstamo Colaboradores (24%)</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label for="monto">Monto del préstamo (USD)</label>
+        <input type="number" id="monto" min="1000" max="100000" step="1000" value="10000">
+    </div>
+    
+    <div class="form-group">
+        <label for="plazo">Plazo (meses)</label>
+        <input type="range" id="plazo" min="12" max="60" step="12" value="60">
+        <span id="plazo-value">60 meses</span>
+    </div>
+    
+    <div class="form-group">
+        <label for="tasa">Tasa de interés anual</label>
+        <input type="text" id="tasa" value="12%" readonly>
+    </div>
+</div>
