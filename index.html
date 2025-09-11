@@ -309,15 +309,15 @@
                 <div class="contact-form">
                     <h3>Solicita más información</h3>
                     <form id="infoForm">
-                        <input type="text" placeholder="Nombre completo" required>
-                        <input type="email" placeholder="Correo electrónico" required>
-                        <input type="tel" placeholder="Teléfono">
-                        <select required>
+                        <input type="text" name="nombre" placeholder="Nombre completo" required>
+                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                        <input type="tel" name="telefono" placeholder="Teléfono">
+                        <select name="producto" required>
                             <option value="" disabled selected>Selecciona un producto</option>
                             <option value="hipotecario">Préstamo Hipotecario</option>
                             <option value="colaboradores">Préstamo para Colaboradores</option>
                         </select>
-                        <textarea placeholder="Mensaje" required></textarea>
+                        <textarea name="mensaje" placeholder="Mensaje" required></textarea>
                         <button type="submit" class="btn">Enviar solicitud</button>
                     </form>
                 </div>
