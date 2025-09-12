@@ -68,6 +68,11 @@ body {
 }
 
 @media (max-width: 900px) {
+    .logo-text img {
+        width: 315px !important;
+        height: auto !important;
+        max-width: 80%;
+    }
     .header-container {
     flex-direction: row;
     justify-content: flex-start;
