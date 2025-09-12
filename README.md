@@ -7,10 +7,13 @@ Proyecto web para simulación de préstamos y formulario de contacto.
 ```
 prestamax2/
 ├── index.html
-├── styles.css
-├── script.js
-├── tab.js
-├── contact-form.js
+├── js/
+│   ├── script.js
+│   ├── tab.js
+│   ├── contact-form.js
+│   └── hamburger-menu.js
+├── css/
+│   └── styles.css
 ├── images/
 ├── prestamax-backend/
 │   ├── index.js
