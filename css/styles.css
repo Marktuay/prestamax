@@ -1,3 +1,20 @@
+/* Botón flotante WhatsApp */
+.whatsapp-float {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+    background: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    transition: box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.whatsapp-float:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
 :root {
     --primary: #44ad4d; /* Verde principal */
     --secondary: #2ecc71; /* Verde secundario */
