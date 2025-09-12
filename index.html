@@ -17,7 +17,12 @@
             <div class="logo">
                 <div class="logo-text"><img src="images/logo.svg" alt="logo de Prestamax" width="394px" height="94px"> </div>
             </div>
-            <nav>
+            <button class="hamburger" id="hamburger-menu" aria-label="Abrir menú">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <nav id="main-nav">
                 <ul>
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#productos">Productos</a></li>
@@ -239,7 +244,7 @@
     
     <div class="calculator-result">
         <h3 style="color:white;">Tu cuota mensual sería:</h3>
-        <div class="monthly-payment" id="cuota">$222.44 USD</div>
+        <div class="monthly-payment" id="cuota"></div>
         <p style="color: white;">* Cálculo aproximado sujeto a verificación y aprobación.</p> <br>
         <a href="#contacto" class="btn">Solicitar ahora</a>
     </div>
@@ -374,5 +379,6 @@
 
     <script src="script.js"></script>
     <script src="tab.js"></script>
+    <script src="hamburger-menu.js"></script>add
 </body>
 </html>
