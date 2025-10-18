@@ -45,6 +45,19 @@ prestamax2/
 - [Política de Privacidad](privacy-policy.html)
 - [Términos y Condiciones](terms.html)
 
+## Diagnóstico y verificación del backend
+
+- Para comprobar que el backend y la base de datos funcionan correctamente, puedes acceder a la ruta de diagnóstico:
+  - [http://localhost:3001/debug/last-contact](http://localhost:3001/debug/last-contact)
+  - Esto mostrará los últimos 10 registros recibidos por el formulario de contacto.
+
+- En la terminal donde ejecutas el backend (`node index.js`) verás logs de cada petición recibida y cualquier error de MySQL.
+
+- Para consultar manualmente la base de datos desde la terminal:
+  ```bash
+  mysql -u root -p -D prestamax -e "SELECT * FROM correos ORDER BY id DESC LIMIT 10;"
+  ```
+
 ## Instalación y ejecución
 
 ### Frontend
