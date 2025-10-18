@@ -4,14 +4,18 @@ Proyecto web para simulación de préstamos y formulario de contacto.
 
 ## Estructura del proyecto
 
+
 ```
 prestamax2/
 ├── index.html
+├── privacy-policy.html
+├── terms.html
 ├── js/
 │   ├── script.js
 │   ├── tab.js
 │   ├── contact-form.js
-│   └── hamburger-menu.js
+│   ├── hamburger-menu.js
+│   └── cookies.js
 ├── css/
 │   └── styles.css
 ├── images/
@@ -20,14 +24,26 @@ prestamax2/
 │   └── package.json
 ```
 
-## Descripción de archivos principales
 
-- **index.html**: Página principal con formulario de simulación y contacto.
-- **styles.css**: Estilos para la página web.
-- **script.js**: Calculadora de préstamos (monto, plazo, tipo, tasa, cuota mensual).
-- **tab.js**: Control de pestañas (tabs) en la interfaz.
-- **contact-form.js**: Envía datos del formulario de contacto al backend.
-- **prestamax-backend/index.js**: Backend Express para recibir y guardar correos (o más datos) enviados desde el formulario.
+## Páginas principales
+
+- **index.html**: Página principal con simulador y formulario de contacto.
+- **privacy-policy.html**: Política de Privacidad, describe el tratamiento de datos personales, cookies y derechos del usuario.
+- **terms.html**: Términos y Condiciones, regula el uso del sitio, limitación de responsabilidad y propiedad intelectual.
+
+## Archivos y scripts
+- **styles.css**: Estilos globales.
+- **script.js**: Calculadora de préstamos.
+- **tab.js**: Control de pestañas.
+- **contact-form.js**: Validación y envío de formulario de contacto.
+- **hamburger-menu.js**: Menú responsivo.
+- **cookies.js**: Banner y gestión de cookies.
+- **prestamax-backend/index.js**: Backend Express para recibir y guardar datos en MySQL.
+
+
+## Enlaces rápidos
+- [Política de Privacidad](privacy-policy.html)
+- [Términos y Condiciones](terms.html)
 
 ## Instalación y ejecución
 

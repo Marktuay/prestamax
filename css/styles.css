@@ -192,6 +192,16 @@ header {
     align-items: center;
 }
 
+/* Ensure consistent spacing between logo image and controls */
+.logo img {
+    display: block;
+}
+.logo .logo-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .logo-text {
     font-size: 24px;
     font-weight: bold;
