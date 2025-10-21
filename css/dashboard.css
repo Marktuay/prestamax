@@ -1,0 +1,79 @@
+/* Filtros avanzados en grid de dos columnas */
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+    max-width: 400px;
+}
+.filters-grid input[type="text"] {
+    padding: 4px 8px;
+    font-size: 0.95em;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+body { font-family: 'Montserrat', Arial, sans-serif; margin: 0; background: #f7f7f7; }
+header { background: #4CAF50; color: white; padding: 20px 0; text-align: center; }
+footer { background: #222; color: #ccc; text-align: center; padding: 16px 0; position: fixed; left: 0; bottom: 0; width: 100%; }
+h1 { margin: 0; font-size: 2.2em; }
+.container { max-width: 900px; margin: 0 auto; padding: 30px 20px 80px 20px; }
+.section { margin-bottom: 40px; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; border-radius: 4px; }
+button:hover { background-color: #45a049; }
+input[type="text"], input[type="password"] { padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin: 8px 0; width: 100%; box-sizing: border-box; }
+/* Fix: Prevent stretching of login form fields when returning to login */
+#loginSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    z-index: 10;
+}
+
+#loginSection.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+#loginSection.fade-in {
+    opacity: 1;
+}
+#loginForm { background: white; padding: 32px 28px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; min-width: 300px; max-width: 350px; width: 100%; }
+#loginForm label { margin-bottom: 16px; width: 100%; text-align: left; }
+#loginForm input[type="text"], #loginForm input[type="password"] { width: 100%; min-width: 0; max-width: 100%; box-sizing: border-box; }
+#loginForm button { width: 100%; margin-top: 10px; font-family: 'Montserrat', Arial, sans-serif; }
+#loginError { color: #d32f2f; margin-top: 10px; }
+@media (max-width: 600px) {
+    .container { padding: 10px 5px 80px 5px; }
+    #loginForm { min-width: 220px; padding: 20px 10px; }
+}
+#dashboardContent { display: none; }
+
+/* Botón cerrar sesión estilo estándar (rojo) */
+#logoutBtn {
+    background-color: #d32f2f;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#logoutBtn:hover {
+    background-color: #b71c1c;
+}

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Registros - Prestamax</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <header>
+        <h1>Dashboard de Registros - Prestamax</h1>
+    </header>
+    <div class="container">
+        <div id="loginSection">
+            <form id="loginForm" onsubmit="return login(event)">
+                <label>Usuario:<br><input type="text" id="user" required autocomplete="username"></label>
+                <label>Contraseña:<br><input type="password" id="pass" required autocomplete="current-password"></label>
+                <button type="submit">Ingresar</button>
+            </form>
+            <p id="loginError"></p>
+        </div>
+
+        <div id="dashboardContent" style="display:none;">
+            <button id="logoutBtn" style="float:right;margin-bottom:20px;">Cerrar sesión</button>
+            <div class="section">
+                <h2>Últimos Registros de Consultas/Reclamos</h2>
+                <div class="filters-grid">
+                    <div><input type="text" id="filterNombre" placeholder="Nombre" onkeyup="advancedFilterTable('consultasTable')"></div>
+                    <div><input type="text" id="filterApellido" placeholder="Apellido" onkeyup="advancedFilterTable('consultasTable')"></div>
+                    <div><input type="text" id="filterEmail" placeholder="Email" onkeyup="advancedFilterTable('consultasTable')"></div>
+                    <div><input type="text" id="filterProducto" placeholder="Producto" onkeyup="advancedFilterTable('consultasTable')"></div>
+                    <div><input type="text" id="filterFecha" placeholder="Fecha" onkeyup="advancedFilterTable('consultasTable')"></div>
+                </div>
+                <button onclick="loadConsultas()">Cargar Consultas</button>
+                <table id="consultasTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Producto</th>
+                            <th>Tipo Asunto</th>
+                            <th>Descripción</th>
+                            <th>Contacto</th>
+                            <th>Email</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Últimos Registros de Contacto</h2>
+                <input type="text" id="searchContactos" placeholder="Buscar por nombre o email..." onkeyup="filterTable('contactosTable', 'searchContactos')">
+                <button onclick="loadContactos()">Cargar Contactos</button>
+                <table id="contactosTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Producto</th>
+                            <th>Mensaje</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <footer>
+        &copy; 2025 Prestamax | Dashboard de Registros | Desarrollado por Marktuay
+    </footer>
+    <script>
+        let authHeader = '';
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.onclick = function() {
+                    authHeader = '';
+                    document.getElementById('dashboardContent').style.display = 'none';
+                    showLoginSection();
+                    document.getElementById('user').value = '';
+                    document.getElementById('pass').value = '';
+                };
+            }
+        });
+        function login(event) {
+            event.preventDefault();
+            const user = document.getElementById('user').value;
+            const pass = document.getElementById('pass').value;
+            authHeader = 'Basic ' + btoa(user + ':' + pass);
+            fetch('http://localhost:3001/debug/consultas', {
+                headers: { 'Authorization': authHeader }
+            }).then(async res => {
+                if (res.status === 401) {
+                    document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
+                    document.getElementById('dashboardContent').style.display = 'none';
+                    showLoginSection();
+                    return;
+                }
+                if (res.status === 200) {
+                    try {
+                        const data = await res.json();
+                        if (data && data.ok) {
+                            hideLoginSection();
+                            document.getElementById('dashboardContent').style.display = 'block';
+                            document.getElementById('loginError').textContent = '';
+                            loadConsultas();
+                            loadContactos();
+                        } else {
+                            document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
+                            document.getElementById('dashboardContent').style.display = 'none';
+                            showLoginSection();
+                        }
+                    } catch (e) {
+                        document.getElementById('loginError').textContent = 'Error procesando la respuesta.';
+                        document.getElementById('dashboardContent').style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('loginError').textContent = 'Error inesperado.';
+                    document.getElementById('dashboardContent').style.display = 'none';
+                }
+            }).catch(() => {
+                document.getElementById('loginError').textContent = 'Error de conexión con el servidor.';
+                document.getElementById('dashboardContent').style.display = 'none';
+            });
+            return false;
+        }
+
+        async function loadConsultas() {
+            try {
+                const response = await fetch('http://localhost:3001/debug/consultas', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    displayTable('consultasTable', data.data, ['id', 'nombre', 'apellido', 'producto', 'tipo_asunto', 'descripcion', 'contacto', 'email', 'fecha']);
+                } else {
+                    alert('Error al cargar consultas: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+
+        async function loadContactos() {
+            try {
+                const response = await fetch('http://localhost:3001/debug/last-contact', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    displayTable('contactosTable', data.data, ['id', 'nombre', 'email', 'telefono', 'producto', 'mensaje', 'fecha']);
+                } else {
+                    alert('Error al cargar contactos: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+
+        function displayTable(tableId, data, columns) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = columns.length;
+                td.style.textAlign = 'center';
+                td.textContent = 'No se encontraron registros.';
+                td.title = 'No se encontró ningún dato que coincida con el filtro.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = row[col] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable(tableId, searchId) {
+            const input = document.getElementById(searchId);
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName('tr');
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let txtValue = '';
+                for (let j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue += td[j].textContent || td[j].innerText || '';
+                    }
+                }
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = '';
+                } else {
+                    tr[i].style.display = 'none';
+                }
+            }
+        }
+
+        function advancedFilterTable(tableId) {
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName('tr');
+            // Inputs
+            const nombre = document.getElementById('filterNombre').value.toUpperCase();
+            const apellido = document.getElementById('filterApellido').value.toUpperCase();
+            const email = document.getElementById('filterEmail').value.toUpperCase();
+            const producto = document.getElementById('filterProducto').value.toUpperCase();
+            const fecha = document.getElementById('filterFecha').value.toUpperCase();
+            for (let i = 1; i < tr.length; i++) {
+                const td = tr[i].getElementsByTagName('td');
+                let show = true;
+                if (nombre && (!td[1] || td[1].textContent.toUpperCase().indexOf(nombre) === -1)) show = false;
+                if (apellido && (!td[2] || td[2].textContent.toUpperCase().indexOf(apellido) === -1)) show = false;
+                if (producto && (!td[3] || td[3].textContent.toUpperCase().indexOf(producto) === -1)) show = false;
+                if (email && (!td[7] || td[7].textContent.toUpperCase().indexOf(email) === -1)) show = false;
+                if (fecha && (!td[8] || td[8].textContent.toUpperCase().indexOf(fecha) === -1)) show = false;
+                tr[i].style.display = show ? '' : 'none';
+            }
+        }
+
+        function showLoginSection() {
+            const loginSection = document.getElementById('loginSection');
+            loginSection.classList.remove('fade-out');
+            loginSection.classList.add('fade-in');
+            loginSection.style.display = 'flex';
+        }
+        function hideLoginSection() {
+            const loginSection = document.getElementById('loginSection');
+            loginSection.classList.remove('fade-in');
+            loginSection.classList.add('fade-out');
+            setTimeout(() => {
+                loginSection.style.display = 'none';
+            }, 500);
+        }
+    </script>
+</body>
+</html>

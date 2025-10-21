@@ -8,12 +8,14 @@ Proyecto web para simulación de préstamos y formulario de contacto.
 ```
 prestamax2/
 ├── index.html
+├── consultas-reclamos.html
 ├── privacy-policy.html
 ├── terms.html
 ├── js/
 │   ├── script.js
 │   ├── tab.js
 │   ├── contact-form.js
+│   ├── consultas-form.js
 │   ├── hamburger-menu.js
 │   └── cookies.js
 ├── css/
@@ -28,6 +30,7 @@ prestamax2/
 ## Páginas principales
 
 - **index.html**: Página principal con simulador y formulario de contacto.
+- **consultas-reclamos.html**: Formulario para consultas, reclamos y quejas.
 - **privacy-policy.html**: Política de Privacidad, describe el tratamiento de datos personales, cookies y derechos del usuario.
 - **terms.html**: Términos y Condiciones, regula el uso del sitio, limitación de responsabilidad y propiedad intelectual.
 
@@ -36,26 +39,29 @@ prestamax2/
 - **script.js**: Calculadora de préstamos.
 - **tab.js**: Control de pestañas.
 - **contact-form.js**: Validación y envío de formulario de contacto.
+- **consultas-form.js**: Validación y envío de formulario de consultas/reclamos.
 - **hamburger-menu.js**: Menú responsivo.
 - **cookies.js**: Banner y gestión de cookies.
 - **prestamax-backend/index.js**: Backend Express para recibir y guardar datos en MySQL.
 
 
 ## Enlaces rápidos
+- [Consultas, Reclamos y Quejas](consultas-reclamos.html)
 - [Política de Privacidad](privacy-policy.html)
 - [Términos y Condiciones](terms.html)
 
 ## Diagnóstico y verificación del backend
 
-- Para comprobar que el backend y la base de datos funcionan correctamente, puedes acceder a la ruta de diagnóstico:
-  - [http://localhost:3001/debug/last-contact](http://localhost:3001/debug/last-contact)
-  - Esto mostrará los últimos 10 registros recibidos por el formulario de contacto.
+- Para comprobar que el backend y la base de datos funcionan correctamente, puedes acceder a las rutas de diagnóstico:
+  - [http://localhost:3001/debug/last-contact](http://localhost:3001/debug/last-contact): Últimos 10 registros del formulario de contacto.
+  - [http://localhost:3001/debug/consultas](http://localhost:3001/debug/consultas): Últimos 10 registros del formulario de consultas/reclamos.
 
 - En la terminal donde ejecutas el backend (`node index.js`) verás logs de cada petición recibida y cualquier error de MySQL.
 
 - Para consultar manualmente la base de datos desde la terminal:
   ```bash
   mysql -u root -p -D prestamax -e "SELECT * FROM correos ORDER BY id DESC LIMIT 10;"
+  mysql -u root -p -D prestamax -e "SELECT * FROM consultas ORDER BY id DESC LIMIT 10;"
   ```
 
 ## Instalación y ejecución
@@ -75,7 +81,7 @@ prestamax2/
 3. El backend escuchará en el puerto 3001.
 
 ### Conexión con MySQL (opcional)
-- Instala MySQL y crea la base de datos y tabla:
+- Instala MySQL y crea la base de datos y tablas:
   ```sql
   CREATE DATABASE prestamax;
   USE prestamax;
@@ -86,6 +92,16 @@ prestamax2/
       telefono VARCHAR(50),
       producto VARCHAR(100),
       mensaje TEXT
+  );
+  CREATE TABLE consultas (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(255) NOT NULL,
+      apellido VARCHAR(255) NOT NULL,
+      producto VARCHAR(100),
+      tipo_asunto VARCHAR(100),
+      descripcion TEXT,
+      contacto VARCHAR(50),
+      email VARCHAR(255) NOT NULL
   );
   ```
 - Modifica `index.js` para conectar y guardar los datos en MySQL.
