@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Registros - Prestamax</title>
     <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <header>
         <h1>Dashboard de Registros - Prestamax</h1>
+        <button id="logoutBtn" style="display:none;">Cerrar sesión</button>
     </header>
     <div class="container">
         <div id="loginSection">
@@ -21,17 +23,25 @@
         </div>
 
         <div id="dashboardContent" style="display:none;">
-            <button id="logoutBtn" style="float:right;margin-bottom:20px;">Cerrar sesión</button>
+            <div id="dashboardIndicators" class="indicators" style="display:none; margin-bottom:24px;"></div>
             <div class="section">
                 <h2>Últimos Registros de Consultas/Reclamos</h2>
-                <div class="filters-grid">
-                    <div><input type="text" id="filterNombre" placeholder="Nombre" onkeyup="advancedFilterTable('consultasTable')"></div>
-                    <div><input type="text" id="filterApellido" placeholder="Apellido" onkeyup="advancedFilterTable('consultasTable')"></div>
-                    <div><input type="text" id="filterEmail" placeholder="Email" onkeyup="advancedFilterTable('consultasTable')"></div>
-                    <div><input type="text" id="filterProducto" placeholder="Producto" onkeyup="advancedFilterTable('consultasTable')"></div>
-                    <div><input type="text" id="filterFecha" placeholder="Fecha" onkeyup="advancedFilterTable('consultasTable')"></div>
+                <div class="filters-advanced">
+                    <label>Fecha desde: <input type="date" id="filterFechaDesde" onchange="applyAdvancedFilters()"></label>
+                    <label>Fecha hasta: <input type="date" id="filterFechaHasta" onchange="applyAdvancedFilters()"></label>
+                    <label>Tipo de asunto:
+                        <select id="filterTipoAsunto" onchange="applyAdvancedFilters()">
+                            <option value="">Todos</option>
+                            <option value="consulta">Consulta</option>
+                            <option value="reclamo">Reclamo</option>
+                            <option value="queja">Queja</option>
+                        </select>
+                    </label>
                 </div>
+                <input type="text" id="searchConsultas" placeholder="Buscar por nombre, apellido o email..." onkeyup="filterTable('consultasTable', 'searchConsultas')">
                 <button onclick="loadConsultas()">Cargar Consultas</button>
+                <button onclick="exportCSV('consultasTable', consultasData, ['id','nombre','apellido','producto','tipo_asunto','descripcion','contacto','email','fecha'])">Exportar CSV</button>
+                <button onclick="exportExcel('consultasTable', consultasData, ['id','nombre','apellido','producto','tipo_asunto','descripcion','contacto','email','fecha'])">Exportar Excel</button>
                 <table id="consultasTable">
                     <thead>
                         <tr>
@@ -52,8 +62,21 @@
 
             <div class="section">
                 <h2>Últimos Registros de Contacto</h2>
+                <div class="filters-advanced">
+                    <label>Fecha desde: <input type="date" id="filterFechaDesdeContactos" onchange="applyAdvancedFiltersContactos()"></label>
+                    <label>Fecha hasta: <input type="date" id="filterFechaHastaContactos" onchange="applyAdvancedFiltersContactos()"></label>
+                    <label>Producto:
+                        <select id="filterProductoContactos" onchange="applyAdvancedFiltersContactos()">
+                            <option value="">Todos</option>
+                            <option value="hipotecario">Hipotecario</option>
+                            <option value="colaborador">Colaborador</option>
+                        </select>
+                    </label>
+                </div>
                 <input type="text" id="searchContactos" placeholder="Buscar por nombre o email..." onkeyup="filterTable('contactosTable', 'searchContactos')">
                 <button onclick="loadContactos()">Cargar Contactos</button>
+                <button onclick="exportCSV('contactosTable', contactosData, ['id','nombre','email','telefono','producto','mensaje','fecha'])">Exportar CSV</button>
+                <button onclick="exportExcel('contactosTable', contactosData, ['id','nombre','email','telefono','producto','mensaje','fecha'])">Exportar Excel</button>
                 <table id="contactosTable">
                     <thead>
                         <tr>
@@ -74,6 +97,7 @@
     <footer>
         &copy; 2025 Prestamax | Dashboard de Registros | Desarrollado por Marktuay
     </footer>
+    <div id="toast" class="toast" style="display:none;"></div>
     <script>
         let authHeader = '';
         document.addEventListener('DOMContentLoaded', function() {
@@ -85,6 +109,7 @@
                     showLoginSection();
                     document.getElementById('user').value = '';
                     document.getElementById('pass').value = '';
+                    logoutBtn.style.display = 'none';
                 };
             }
         });
@@ -111,10 +136,13 @@
                             document.getElementById('loginError').textContent = '';
                             loadConsultas();
                             loadContactos();
+                            document.getElementById('logoutBtn').style.display = 'inline-block';
+                            resetInactivityTimer();
                         } else {
                             document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
                             document.getElementById('dashboardContent').style.display = 'none';
                             showLoginSection();
+                            document.getElementById('logoutBtn').style.display = 'none';
                         }
                     } catch (e) {
                         document.getElementById('loginError').textContent = 'Error procesando la respuesta.';
@@ -131,37 +159,17 @@
             return false;
         }
 
-        async function loadConsultas() {
-            try {
-                const response = await fetch('http://localhost:3001/debug/consultas', {
-                    headers: { 'Authorization': authHeader }
-                });
-                const data = await response.json();
-                if (data.ok) {
-                    displayTable('consultasTable', data.data, ['id', 'nombre', 'apellido', 'producto', 'tipo_asunto', 'descripcion', 'contacto', 'email', 'fecha']);
-                } else {
-                    alert('Error al cargar consultas: ' + data.message);
-                }
-            } catch (error) {
-                alert('Error de conexión: ' + error.message);
-            }
-        }
+        let consultasData = [];
+        let consultasPage = 1;
+        const consultasPageSize = 10;
+        let consultasSortCol = null;
+        let consultasSortDir = 1;
 
-        async function loadContactos() {
-            try {
-                const response = await fetch('http://localhost:3001/debug/last-contact', {
-                    headers: { 'Authorization': authHeader }
-                });
-                const data = await response.json();
-                if (data.ok) {
-                    displayTable('contactosTable', data.data, ['id', 'nombre', 'email', 'telefono', 'producto', 'mensaje', 'fecha']);
-                } else {
-                    alert('Error al cargar contactos: ' + data.message);
-                }
-            } catch (error) {
-                alert('Error de conexión: ' + error.message);
-            }
-        }
+        let contactosData = [];
+        let contactosSortCol = null;
+        let contactosSortDir = 1;
+        let contactosPage = 1;
+        const contactosPageSize = 10;
 
         function displayTable(tableId, data, columns) {
             const tbody = document.querySelector(`#${tableId} tbody`);
@@ -177,7 +185,12 @@
                 tbody.appendChild(tr);
                 return;
             }
-            data.forEach(row => {
+            // PAGINACIÓN SOLO PARA CONSULTAS
+            let paginatedData = data;
+            if (tableId === 'consultasTable') {
+                paginatedData = data.slice((consultasPage-1)*consultasPageSize, consultasPage*consultasPageSize);
+            }
+            paginatedData.forEach(row => {
                 const tr = document.createElement('tr');
                 columns.forEach(col => {
                     const td = document.createElement('td');
@@ -186,6 +199,218 @@
                 });
                 tbody.appendChild(tr);
             });
+            // Controles de paginación para consultas
+            if (tableId === 'consultasTable' && data.length > consultasPageSize) {
+                let pagination = document.getElementById('consultasPagination');
+                if (!pagination) {
+                    pagination = document.createElement('div');
+                    pagination.id = 'consultasPagination';
+                    pagination.className = 'pagination-controls';
+                    tbody.parentElement.parentElement.appendChild(pagination);
+                }
+                pagination.innerHTML = '';
+                const totalPages = Math.ceil(data.length / consultasPageSize);
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = (i === consultasPage) ? 'active' : '';
+                    btn.onclick = function() {
+                        consultasPage = i;
+                        displayTable('consultasTable', consultasData, columns);
+                    };
+                    pagination.appendChild(btn);
+                }
+            } else if (tableId === 'consultasTable') {
+                const pagination = document.getElementById('consultasPagination');
+                if (pagination) pagination.remove();
+            }
+        }
+
+        function makeTableSortable(tableId, columns) {
+            const table = document.getElementById(tableId);
+            const ths = table.querySelectorAll('thead th');
+            ths.forEach((th, idx) => {
+                th.style.cursor = 'pointer';
+                th.onclick = function() {
+                    if (consultasSortCol === idx) {
+                        consultasSortDir *= -1;
+                    } else {
+                        consultasSortCol = idx;
+                        consultasSortDir = 1;
+                    }
+                    consultasData.sort((a, b) => {
+                        const col = columns[idx];
+                        let valA = a[col] || '';
+                        let valB = b[col] || '';
+                        // Si es fecha, comparar como fecha
+                        if (col === 'fecha') {
+                            valA = new Date(valA);
+                            valB = new Date(valB);
+                        }
+                        if (valA < valB) return -1 * consultasSortDir;
+                        if (valA > valB) return 1 * consultasSortDir;
+                        return 0;
+                    });
+                    displayTable(tableId, consultasData, columns);
+                };
+            });
+        }
+
+        function makeTableSortableContactos(tableId, columns) {
+            const table = document.getElementById(tableId);
+            const ths = table.querySelectorAll('thead th');
+            ths.forEach((th, idx) => {
+                th.style.cursor = 'pointer';
+                th.onclick = function() {
+                    if (contactosSortCol === idx) {
+                        contactosSortDir *= -1;
+                    } else {
+                        contactosSortCol = idx;
+                        contactosSortDir = 1;
+                    }
+                    contactosData.sort((a, b) => {
+                        const col = columns[idx];
+                        let valA = a[col] || '';
+                        let valB = b[col] || '';
+                        if (col === 'fecha') {
+                            valA = new Date(valA);
+                            valB = new Date(valB);
+                        }
+                        if (valA < valB) return -1 * contactosSortDir;
+                        if (valA > valB) return 1 * contactosSortDir;
+                        return 0;
+                    });
+                    displayTableContactos(tableId, contactosData, columns);
+                };
+            });
+        }
+
+        function displayTableContactos(tableId, data, columns) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = columns.length;
+                td.style.textAlign = 'center';
+                td.textContent = 'No se encontraron registros.';
+                td.title = 'No se encontró ningún dato que coincida con el filtro.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            let paginatedData = data.slice((contactosPage-1)*contactosPageSize, contactosPage*contactosPageSize);
+            paginatedData.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = row[col] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            // Paginación
+            if (data.length > contactosPageSize) {
+                let pagination = document.getElementById('contactosPagination');
+                if (!pagination) {
+                    pagination = document.createElement('div');
+                    pagination.id = 'contactosPagination';
+                    pagination.className = 'pagination-controls';
+                    tbody.parentElement.parentElement.appendChild(pagination);
+                }
+                pagination.innerHTML = '';
+                const totalPages = Math.ceil(data.length / contactosPageSize);
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.className = (i === contactosPage) ? 'active' : '';
+                    btn.onclick = function() {
+                        contactosPage = i;
+                        displayTableContactos(tableId, contactosData, columns);
+                    };
+                    pagination.appendChild(btn);
+                }
+            } else {
+                const pagination = document.getElementById('contactosPagination');
+                if (pagination) pagination.remove();
+            }
+        }
+
+        function updateIndicators() {
+            const indicators = document.getElementById('dashboardIndicators');
+            if (!consultasData || !contactosData) return;
+            const totalConsultas = consultasData.length;
+            const totalContactos = contactosData.length;
+            // Desglose por tipo de asunto en consultas
+            const tipoCounts = { consulta: 0, reclamo: 0, queja: 0 };
+            consultasData.forEach(r => {
+                if (r.tipo_asunto && tipoCounts.hasOwnProperty(r.tipo_asunto)) {
+                    tipoCounts[r.tipo_asunto]++;
+                }
+            });
+            indicators.innerHTML = `
+                <div class="indicator-card consultas">
+                    <strong>Total Consultas/Reclamos:</strong> ${totalConsultas}<br>
+                    <span>Consultas: ${tipoCounts.consulta} | Reclamos: ${tipoCounts.reclamo} | Quejas: ${tipoCounts.queja}</span>
+                </div>
+                <div class="indicator-card contactos">
+                    <strong>Total Contactos:</strong> ${totalContactos}
+                </div>
+            `;
+            indicators.style.display = 'flex';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        async function loadConsultas() {
+            try {
+                const response = await fetch('http://localhost:3001/debug/consultas', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    consultasData = data.data;
+                    consultasPage = 1;
+                    displayTable('consultasTable', consultasData, ['id', 'nombre', 'apellido', 'producto', 'tipo_asunto', 'descripcion', 'contacto', 'email', 'fecha']);
+                    makeTableSortable('consultasTable', ['id', 'nombre', 'apellido', 'producto', 'tipo_asunto', 'descripcion', 'contacto', 'email', 'fecha']);
+                    updateIndicators();
+                    showToast('Consultas cargadas correctamente');
+                } else {
+                    alert('Error al cargar consultas: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+
+        async function loadContactos() {
+            try {
+                const response = await fetch('http://localhost:3001/debug/last-contact', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    contactosData = data.data;
+                    contactosPage = 1;
+                    displayTableContactos('contactosTable', contactosData, ['id', 'nombre', 'email', 'telefono', 'producto', 'mensaje', 'fecha']);
+                    makeTableSortableContactos('contactosTable', ['id', 'nombre', 'email', 'telefono', 'producto', 'mensaje', 'fecha']);
+                    updateIndicators();
+                    showToast('Contactos cargados correctamente');
+                } else {
+                    alert('Error al cargar contactos: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
         }
 
         function filterTable(tableId, searchId) {
@@ -218,6 +443,7 @@
             const email = document.getElementById('filterEmail').value.toUpperCase();
             const producto = document.getElementById('filterProducto').value.toUpperCase();
             const fecha = document.getElementById('filterFecha').value.toUpperCase();
+            let visibleRows = 0;
             for (let i = 1; i < tr.length; i++) {
                 const td = tr[i].getElementsByTagName('td');
                 let show = true;
@@ -227,6 +453,25 @@
                 if (email && (!td[7] || td[7].textContent.toUpperCase().indexOf(email) === -1)) show = false;
                 if (fecha && (!td[8] || td[8].textContent.toUpperCase().indexOf(fecha) === -1)) show = false;
                 tr[i].style.display = show ? '' : 'none';
+                if (show) visibleRows++;
+            }
+            // Si no hay filas visibles, mostrar mensaje
+            const tbody = table.querySelector('tbody');
+            let noDataRow = tbody.querySelector('.no-data-row');
+            if (visibleRows === 0) {
+                if (!noDataRow) {
+                    noDataRow = document.createElement('tr');
+                    noDataRow.className = 'no-data-row';
+                    const td = document.createElement('td');
+                    td.colSpan = tr[0].children.length;
+                    td.style.textAlign = 'center';
+                    td.textContent = 'No se encontraron registros.';
+                    td.title = 'No se encontró ningún dato que coincida con el filtro.';
+                    noDataRow.appendChild(td);
+                    tbody.appendChild(noDataRow);
+                }
+            } else {
+                if (noDataRow) tbody.removeChild(noDataRow);
             }
         }
 
@@ -244,6 +489,100 @@
                 loginSection.style.display = 'none';
             }, 500);
         }
+
+        function exportCSV(tableId, data, columns) {
+            if (!data || !data.length) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+            let csv = columns.join(',') + '\n';
+            data.forEach(row => {
+                let line = columns.map(col => '"' + (row[col] ? String(row[col]).replace(/"/g, '""') : '') + '"').join(',');
+                csv += line + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = tableId + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportExcel(tableId, data, columns) {
+            if (!data || !data.length) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+            const rows = [columns];
+            data.forEach(row => {
+                rows.push(columns.map(col => row[col] || ''));
+            });
+            const worksheet = XLSX.utils.aoa_to_sheet(rows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, tableId);
+            XLSX.writeFile(workbook, tableId + '.xlsx');
+        }
+
+        function applyAdvancedFilters() {
+            let filtered = consultasData;
+            // Filtro por fecha
+            const desde = document.getElementById('filterFechaDesde').value;
+            const hasta = document.getElementById('filterFechaHasta').value;
+            if (desde) {
+                filtered = filtered.filter(r => r.fecha && r.fecha >= desde);
+            }
+            if (hasta) {
+                filtered = filtered.filter(r => r.fecha && r.fecha <= hasta);
+            }
+            // Filtro por tipo de asunto
+            const tipo = document.getElementById('filterTipoAsunto').value;
+            if (tipo) {
+                filtered = filtered.filter(r => r.tipo_asunto === tipo);
+            }
+            displayTable('consultasTable', filtered, ['id', 'nombre', 'apellido', 'producto', 'tipo_asunto', 'descripcion', 'contacto', 'email', 'fecha']);
+        }
+
+        function applyAdvancedFiltersContactos() {
+            let filtered = contactosData;
+            // Filtro por fecha
+            const desde = document.getElementById('filterFechaDesdeContactos').value;
+            const hasta = document.getElementById('filterFechaHastaContactos').value;
+            if (desde) {
+                filtered = filtered.filter(r => r.fecha && r.fecha >= desde);
+            }
+            if (hasta) {
+                filtered = filtered.filter(r => r.fecha && r.fecha <= hasta);
+            }
+            // Filtro por producto
+            const producto = document.getElementById('filterProductoContactos').value;
+            if (producto) {
+                filtered = filtered.filter(r => r.producto === producto);
+            }
+            displayTableContactos('contactosTable', filtered, ['id', 'nombre', 'email', 'telefono', 'producto', 'mensaje', 'fecha']);
+        }
+
+        let inactivityTimeout;
+        const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutos
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            inactivityTimeout = setTimeout(() => {
+                authHeader = '';
+                document.getElementById('dashboardContent').style.display = 'none';
+                showLoginSection();
+                document.getElementById('user').value = '';
+                document.getElementById('pass').value = '';
+                document.getElementById('logoutBtn').style.display = 'none';
+                showToast('Sesión cerrada por inactividad');
+            }, INACTIVITY_LIMIT);
+        }
+        // Reinicia el timer en cada acción relevante
+        ['click','keydown','mousemove','touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetInactivityTimer);
+        });
+        // Inicia el timer al mostrar el dashboard
     </script>
 </body>
 </html>
