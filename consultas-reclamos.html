@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Consultas, Reclamos y Quejas - Prestamax</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <div class="container header-container">
+      <div class="logo">
+        <div class="logo-text"><a href="index.html"><img src="images/logo.svg" alt="logo de Prestamax" width="260"></a></div>
+        <button class="hamburger" id="hamburger-menu" aria-label="Abrir menú">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+      <nav id="main-nav">
+        <ul>
+          <li><a href="index.html#inicio">Inicio</a></li>
+          <li><a href="index.html#productos">Productos</a></li>
+          <li><a href="index.html#requisitos">Requisitos</a></li>
+          <li><a href="index.html#calculadora-titulo">Calculadora</a></li>
+          <li><a href="index.html#nosotros">Nosotros</a></li>
+          <li><a href="index.html#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+
+  <section class="hero-consultas">
+    <div class="hero-consultas-content">
+      <div class="hero-consultas-img">
+        <img src="images/quejas-reclamos-consultas.jpg" alt="Consultas, Reclamos y Quejas" />
+      </div>
+      <div class="hero-consultas-form">
+        <h1>Consultas, Reclamos o Quejas</h1>
+        <form id="form-consultas" class="formulario-consultas" autocomplete="off">
+          <div id="mensaje-form" style="display:none;"></div>
+          <div class="form-row">
+            <div class="form-col">
+              <div class="form-group">
+                <label for="nombre"><i class="fas fa-user"></i> Nombre</label>
+                <input type="text" id="nombre" name="nombre" required maxlength="50">
+              </div>
+              <div class="form-group">
+                <label for="producto"><i class="fas fa-briefcase"></i> Tipo de producto</label>
+                <select id="producto" name="producto" required>
+                  <option value="">Seleccione...</option>
+                  <option value="hipotecario">Crédito hipotecario</option>
+                  <option value="colaborador">Préstamo colaborador</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="tipo-asunto"><i class="fas fa-comment-dots"></i> Tipo de asunto</label>
+                <select id="tipo-asunto" name="tipoAsunto" required>
+                  <option value="">Seleccione...</option>
+                  <option value="consulta">Consulta</option>
+                  <option value="reclamo">Reclamo</option>
+                  <option value="queja">Queja</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-col">
+              <div class="form-group">
+                <label for="apellido"><i class="fas fa-user-tag"></i> Apellido</label>
+                <input type="text" id="apellido" name="apellido" required maxlength="50">
+              </div>
+              <div class="form-group">
+                <label for="contacto"><i class="fas fa-phone"></i> Número de contacto</label>
+                <input type="text" id="contacto" name="contacto" maxlength="20">
+              </div>
+              <div class="form-group">
+                <label for="email"><i class="fas fa-envelope"></i> Correo electrónico</label>
+                <input type="email" id="email" name="email" required maxlength="100">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="descripcion"><i class="fas fa-align-left"></i> Descripción del asunto</label>
+            <textarea id="descripcion" name="descripcion" rows="4" required maxlength="1000"></textarea>
+          </div>
+          <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Enviar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>Prestamax</h3>
+          <p>Tu aliado financiero para hacer realidad tus proyectos sin límites.</p>
+        </div>
+        <div class="footer-column">
+          <h3>Productos</h3>
+          <ul>
+            <li><a href="index.html#productos">Préstamos Hipotecarios</a></li>
+            <li><a href="index.html#productos">Préstamos para Colaboradores</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Enlaces Rápidos</h3>
+          <ul>
+            <li><a href="index.html#requisitos">Requisitos</a></li>
+            <li><a href="index.html#calculadora-titulo">Calculadora</a></li>
+            <li><a href="index.html#nosotros">Sobre Nosotros</a></li>
+            <li><a href="index.html#contacto">Contacto</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="terms.html">Términos y Condiciones</a></li>
+            <li><a href="privacy-policy.html">Política de Privacidad</a></li>
+            <li><a href="consultas-reclamos.html">Consultas, Reclamos y Quejas</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; <script>document.write(new Date().getFullYear());</script> Prestamax - Todos los derechos reservados</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script src="js/tab.js"></script>
+  <script src="js/contact-form.js"></script>
+  <script src="js/hamburger-menu.js"></script>
+  <script src="js/cookies.js"></script>
+  <script src="js/consultas-form.js"></script>
+</body>
+</html>

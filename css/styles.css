@@ -1,3 +1,235 @@
+/* Formulario en dos columnas para consultas, reclamos y quejas */
+.form-row {
+    display: flex;
+    gap: 32px;
+}
+.form-col {
+    flex: 1 1 0;
+    min-width: 220px;
+}
+@media (max-width: 900px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .form-col {
+        min-width: 100%;
+    }
+}
+.formulario-consultas label {
+    color: #111;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    margin-bottom: 7px;
+    display: block;
+}
+.formulario-consultas label i {
+    color: #111;
+    margin-right: 6px;
+    font-size: 1em;
+    vertical-align: middle;
+}
+/* Mensajes personalizados del formulario de consultas */
+#mensaje-form {
+    margin-bottom: 16px;
+}
+.mensaje-exito {
+    background: #d1e7dd;
+    color: #111;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 1em;
+    display: block;
+}
+.mensaje-error {
+    background: #f8d7da;
+    color: #111;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 1em;
+    display: block;
+}
+/* Formulario de consultas, reclamos y quejas (igual estilo que home) */
+.formulario-consultas {
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(44, 173, 77, 0.08);
+    padding: 32px 24px;
+    max-width: 520px;
+    margin: 32px auto;
+    border: 1px solid #e0e0e0;
+}
+.formulario-consultas .form-group {
+    margin-bottom: 22px;
+}
+.formulario-consultas label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: #44ad4d;
+    font-family: var(--font-primary);
+}
+.formulario-consultas input,
+.formulario-consultas select,
+.formulario-consultas textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #b2dfdb;
+    border-radius: 6px;
+    font-size: 1em;
+    background: #fff;
+    transition: border-color 0.2s;
+    font-family: var(--font-secondary);
+    color: #333;
+}
+.formulario-consultas input:focus,
+.formulario-consultas select:focus,
+.formulario-consultas textarea:focus {
+    border-color: #44ad4d;
+    outline: none;
+}
+.formulario-consultas textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+.formulario-consultas .btn {
+    background: #44ad4d;
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(44, 173, 77, 0.08);
+    transition: background 0.2s;
+}
+.formulario-consultas .btn:hover {
+    background: var(--secondary);
+    color: #fff;
+}
+@media (max-width: 600px) {
+    .formulario-consultas {
+        padding: 18px 6px;
+        max-width: 98vw;
+    }
+}
+/* Hero para consultas, reclamos y quejas */
+.hero-consultas {
+    background: linear-gradient(90deg, #f8f9fa 60%, #eafaf1 100%);
+    padding: 48px 0 32px 0;
+}
+.hero-consultas-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.hero-consultas-form {
+    flex: 1 1 420px;
+    min-width: 320px;
+    max-width: 520px;
+}
+.hero-consultas-form h1 {
+    font-size: 2.1rem;
+    margin-bottom: 18px;
+    color: var(--primary);
+    font-family: var(--font-primary);
+}
+.hero-consultas-img {
+    flex: 1 1 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    max-width: 420px;
+}
+.hero-consultas-img img {
+    width: 100%;
+    max-width: 380px;
+    height: auto;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(44,173,77,0.10);
+}
+@media (max-width: 900px) {
+    .hero-consultas-content {
+        flex-direction: column-reverse;
+        gap: 24px;
+        align-items: stretch;
+    }
+    .hero-consultas-img {
+        max-width: 100%;
+        margin-bottom: 12px;
+    }
+    .hero-consultas-form {
+        max-width: 100%;
+    }
+}
+/* Formulario de consultas, reclamos y quejas */
+.formulario-consultas {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(44, 173, 77, 0.08);
+    padding: 32px 24px;
+    max-width: 520px;
+    margin: 32px auto;
+}
+.formulario-consultas .form-group {
+    margin-bottom: 22px;
+}
+.formulario-consultas label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: var(--primary);
+}
+.formulario-consultas input,
+.formulario-consultas select,
+.formulario-consultas textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1e7dd;
+    border-radius: 6px;
+    font-size: 1em;
+    background: #f8f9fa;
+    transition: border-color 0.2s;
+    font-family: var(--font-secondary);
+}
+.formulario-consultas input:focus,
+.formulario-consultas select:focus,
+.formulario-consultas textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+.formulario-consultas textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+.formulario-consultas .btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(44, 173, 77, 0.08);
+    transition: background 0.2s;
+}
+.formulario-consultas .btn:hover {
+    background: var(--success);
+}
+@media (max-width: 600px) {
+    .formulario-consultas {
+        padding: 18px 6px;
+        max-width: 98vw;
+    }
+}
 /* Banner de cookies */
 .cookie-banner {
     position: fixed;
@@ -490,7 +722,7 @@ section {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: whitesmoke;
+    color: #111;
 }
 #tipo-prestamo {
     width: 100%;
