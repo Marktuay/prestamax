@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Build
+/dist/
+/build/
+
+# Backend
+prestamax-backend/.env
+prestamax-backend/node_modules/
+prestamax-backend/logs/
+
+# Frontend
+js/*.map
+css/*.map
+
+# Misc
+*.swp
+*.swo
+.idea/
