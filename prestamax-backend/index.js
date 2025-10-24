@@ -1,13 +1,4 @@
-// Crear tabla de logs para registrar actividad en  dashboard de administración
-db.query(`CREATE TABLE IF NOT EXISTS logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100),
-    action VARCHAR(100),
-    details TEXT,
-    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
-)`, (err) => {
-    if (err) console.error('Error creando tabla logs:', err);
-});
+
 const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
@@ -20,11 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: 'Mark8721!',
+    host: '127.0.0.1',
+    user: 'admin',
+    password: 'prestamax2025',
     database: 'prestamax',
-    port: 3306
+    port: 3305
 };
 const db = mysql.createPool(dbConfig);
 
@@ -35,6 +26,17 @@ db.getConnection((err, connection) => {
         console.log('Connected to MySQL (pool)');
         connection.release();
     }
+});
+
+// Crear tabla de logs para registrar actividad en  dashboard de administración
+db.query(`CREATE TABLE IF NOT EXISTS logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100),
+    action VARCHAR(100),
+    details TEXT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+)`, (err) => {
+    if (err) console.error('Error creando tabla logs:', err);
 });
 
 // Crear tabla de usuarios si no existe (solo para desarrollo, en producción usar migraciones)
