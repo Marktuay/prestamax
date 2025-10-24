@@ -842,6 +842,22 @@ section {
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
+.contact-form .btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 1.1em;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(44, 173, 77, 0.08);
+    transition: background 0.2s;
+}
+.contact-form .btn:hover {
+    background: var(--secondary);
+    color: #fff;
+}
 
 .contact-form input,
 .contact-form textarea,

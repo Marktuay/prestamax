@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
   `;
   document.body.appendChild(banner);
 
-  // Evento para aceptar cookies
   document.getElementById('aceptar-cookies').onclick = function() {
     document.cookie = "cookies_aceptadas=si; expires=Fri, 31 Dec 2027 23:59:59 GMT; path=/";
     banner.remove();

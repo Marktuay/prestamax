@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (nombre.length < 2 || nombre.length > 100) errores.push('Nombre inválido.');
             if (!/^\S+@\S+\.\S+$/.test(email)) errores.push('Correo electrónico inválido.');
             if (telefono && (telefono.length < 7 || telefono.length > 20)) errores.push('Teléfono inválido.');
-            if (!['hipotecario', 'colaboradores'].includes(producto)) errores.push('Producto inválido.');
+            if (!['hipotecario', 'colaborador'].includes(producto)) errores.push('Producto inválido.');
             if (mensaje.length < 5 || mensaje.length > 1000) errores.push('Mensaje inválido.');
 
             if (errores.length > 0) {

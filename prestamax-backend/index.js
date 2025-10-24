@@ -1,4 +1,5 @@
 
+require('dotenv').config();
 const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
@@ -11,11 +12,11 @@ app.use(cors());
 app.use(express.json());
 
 const dbConfig = {
-    host: '127.0.0.1',
-    user: 'admin',
-    password: 'prestamax2025',
-    database: 'prestamax',
-    port: 3305
+    host: process.env.DB_HOST || '127.0.0.1',
+    user: process.env.DB_USER || 'admin',
+    password: process.env.DB_PASS || 'prestamax2025',
+    database: process.env.DB_NAME || 'prestamax',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3305
 };
 const db = mysql.createPool(dbConfig);
 
