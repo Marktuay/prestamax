@@ -96,11 +96,11 @@ prestamax/
 3. El backend escuchará en el puerto 3001 y creará automáticamente las tablas necesarias (usuarios, correos, consultas, logs).
 4. Crea el archivo `.env` con los datos de conexión a MySQL:
    ```env
-   DB_HOST=127.0.0.1
-   DB_USER=admin
-   DB_PASS=prestamax2025
-   DB_NAME=prestamax
-   DB_PORT=3305
+   DB_HOST=tu_host_mysql
+   DB_USER=tu_usuario_mysql
+   DB_PASS=tu_contraseña_mysql
+   DB_NAME=tu_base_de_datos
+   DB_PORT=tu_puerto_mysql
    ```
 
 ### Conexión con MySQL
