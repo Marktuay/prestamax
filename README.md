@@ -1,16 +1,14 @@
-
-# Prestamax2
+# Prestamax
 
 Proyecto web para simulación de préstamos, gestión de consultas/reclamos y dashboard administrativo.
 
 ## Estructura del proyecto
 
-
 ```
-prestamax2/
+prestamax/
 ├── index.html
 ├── consultas-reclamos.html
-├── dashboard.html (dashboard administrativo con login y filtros)
+├── dashboard.html
 ├── privacy-policy.html
 ├── terms.html
 ├── js/
@@ -26,9 +24,9 @@ prestamax2/
 ├── images/
 ├── prestamax-backend/
 │   ├── index.js
-│   └── package.json
+│   ├── package.json
+│   └── .env (no se sube a GitHub)
 ```
-
 
 ## Páginas principales
 
@@ -90,12 +88,20 @@ prestamax2/
 ### Backend
 1. Instala Node.js y npm.
 2. Ve a la carpeta `prestamax-backend`:
-  ```bash
-  cd prestamax-backend
-  npm install
-  node index.js
-  ```
+   ```bash
+   cd prestamax-backend
+   npm install
+   node index.js
+   ```
 3. El backend escuchará en el puerto 3001 y creará automáticamente las tablas necesarias (usuarios, correos, consultas, logs).
+4. Crea el archivo `.env` con los datos de conexión a MySQL:
+   ```env
+   DB_HOST=127.0.0.1
+   DB_USER=admin
+   DB_PASS=prestamax2025
+   DB_NAME=prestamax
+   DB_PORT=3305
+   ```
 
 ### Conexión con MySQL
 - Instala MySQL y crea la base de datos y tablas:
@@ -135,16 +141,21 @@ prestamax2/
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP
   );
   ```
-- Modifica `index.js` para conectar y guardar los datos en MySQL.
 
-## Despliegue
-- El frontend puede desplegarse en Vercel, GitHub Pages, Google cloud, etc.
-- El backend Express debe desplegarse en Railway, Render, Heroku, google cloud, etc.
-- Cambia la URL en `contact-form.js` para apuntar al backend público. (Nube)
+## Despliegue y migración
+- El frontend puede desplegarse en Vercel, GitHub Pages, Google Cloud, etc.
+- El backend Express debe desplegarse en Railway, Render, Heroku, Google Cloud, etc.
+- Cambia la URL en los scripts JS para apuntar al backend público.
+- Al migrar, solo actualiza el archivo `.env` o las variables de entorno en la nube para conectar al nuevo servidor MySQL.
+- Asegúrate de que el backend tenga acceso a la base de datos (firewall, permisos, etc.).
+
+## Seguridad y buenas prácticas
+- El backend nunca expone datos sensibles al frontend, solo responde a solicitudes HTTP.
+- El archivo `.env` nunca debe subirse a GitHub (está en `.gitignore`).
+- El frontend nunca se conecta directo a MySQL, solo al backend por HTTP.
+- Para migrar a la nube, solo cambia la configuración en `.env` o en el panel de tu proveedor.
 
 ## Notas
-- El proyecto está listo para ampliarse: puedes agregar validaciones, gestión de usuarios, logs, roles y más seguridad.
-- Si usas MySQL en la nube, recuerda actualizar las credenciales y la configuración de conexión.
 - El dashboard incluye estructura para roles y logs, y puede ampliarse fácilmente para administración avanzada.
 
 ---
