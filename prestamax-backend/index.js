@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const mysql = require('mysql2');
 const express = require('express');
@@ -7,14 +6,13 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
 const dbConfig = {
     host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'admin',
-    password: process.env.DB_PASS || 'prestamax2025',
+    user: process.env.DB_USER || 'admin', // Solo para desarrollo
+    password: process.env.DB_PASS || 'prestamax2025', // Solo para desarrollo
     database: process.env.DB_NAME || 'prestamax',
     port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3305
 };
@@ -29,7 +27,7 @@ db.getConnection((err, connection) => {
     }
 });
 
-// Crear tabla de logs para registrar actividad en  dashboard de administración
+// Crear tabla de logs para registrar actividad en dashboard de administración
 db.query(`CREATE TABLE IF NOT EXISTS logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100),
@@ -71,6 +69,7 @@ db.query(`CREATE TABLE IF NOT EXISTS usuarios (
         }
     });
 });
+
 // Middleware de autenticación básica para rutas de diagnóstico (asíncrono)
 const basicAuth = async (req, res, next) => {
     const auth = req.headers.authorization;
@@ -102,16 +101,37 @@ const basicAuth = async (req, res, next) => {
     }
 };
 
-
-
-process.on('unhandledRejection', (reason) => {
-    console.error('Unhandled Rejection:', reason);
+// Rutas protegidas y públicas
+app.get('/debug/logs', basicAuth, (req, res) => {
+    db.query("SELECT id, username, action, details, fecha FROM logs WHERE action = 'mensaje_sospechoso' ORDER BY fecha DESC LIMIT 50", (err, results) => {
+        if (err) {
+            console.error('MySQL select error (logs):', err);
+            return res.status(500).json({ ok: false, message: 'Error al consultar los logs.' });
+        }
+        res.json({ ok: true, data: results });
+    });
 });
-process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception (see stack):', err.stack || err);
+
+app.get('/debug/consultas', basicAuth, (req, res) => {
+    db.query('SELECT id, nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha FROM consultas ORDER BY id DESC LIMIT 10', (err, results) => {
+        if (err) {
+            console.error('MySQL select error (consultas):', err);
+            return res.status(500).json({ ok: false, message: 'Error al consultar la base de datos.' });
+        }
+        res.json({ ok: true, data: results });
+    });
 });
 
-// Ruta para guardar consultas, reclamos y quejas
+app.get('/debug/last-contact', basicAuth, (req, res) => {
+    db.query('SELECT id, nombre, email, telefono, producto, mensaje, fecha FROM correos ORDER BY id DESC LIMIT 10', (err, results) => {
+        if (err) {
+            console.error('MySQL select error:', err);
+            return res.status(500).json({ ok: false, message: 'Error al consultar la base de datos.' });
+        }
+        res.json({ ok: true, data: results });
+    });
+});
+
 app.post('/consultas', [
     body('nombre').trim().isLength({ min: 2, max: 100 }).escape(),
     body('apellido').trim().isLength({ min: 2, max: 100 }).escape(),
@@ -139,18 +159,6 @@ app.post('/consultas', [
     );
 });
 
-// Ruta de diagnóstico: últimos 10 registros de la tabla consultas
-app.get('/debug/consultas', basicAuth, (req, res) => {
-    db.query('SELECT id, nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha FROM consultas ORDER BY id DESC LIMIT 10', (err, results) => {
-        if (err) {
-            console.error('MySQL select error (consultas):', err);
-            return res.status(500).json({ ok: false, message: 'Error al consultar la base de datos.' });
-        }
-        res.json({ ok: true, data: results });
-    });
-});
-
-// Ruta para guardar consultas, reclamos y quejas
 app.post('/contact', [
     body('nombre').trim().isLength({ min: 2, max: 100 }).escape(),
     body('email').isEmail().normalizeEmail(),
@@ -163,6 +171,22 @@ app.post('/contact', [
         return res.status(400).json({ ok: false, message: 'Datos inválidos.', errors: errors.array() });
     }
     const { nombre, email, telefono, producto, mensaje } = req.body;
+    // Detección de palabras sospechosas
+    const palabrasSospechosas = ['fraude', 'hack', 'ataque', 'robo', 'phishing', 'estafa'];
+    const contieneSospecha = palabrasSospechosas.some(palabra =>
+        mensaje.toLowerCase().includes(palabra)
+    );
+    if (contieneSospecha) {
+        console.log('¡Mensaje sospechoso detectado!', mensaje);
+        // Guardar alerta en la tabla logs
+        db.query(
+            'INSERT INTO logs (username, action, details) VALUES (?, ?, ?)',
+            [email || 'anónimo', 'mensaje_sospechoso', `Mensaje: ${mensaje}`],
+            (err) => {
+                if (err) console.error('Error guardando log de mensaje sospechoso:', err);
+            }
+        );
+    }
     console.log('POST /contact received:', { nombre, email, telefono, producto, mensaje });
     db.query(
         'INSERT INTO correos (nombre, email, telefono, producto, mensaje, fecha) VALUES (?, ?, ?, ?, ?, NOW())',
@@ -177,15 +201,21 @@ app.post('/contact', [
     );
 });
 
-// Ruta de diagnóstico: últimos 10 registros de la tabla correos
-app.get('/debug/last-contact', basicAuth, (req, res) => {
-    db.query('SELECT id, nombre, email, telefono, producto, mensaje, fecha FROM correos ORDER BY id DESC LIMIT 10', (err, results) => {
-        if (err) {
-            console.error('MySQL select error:', err);
-            return res.status(500).json({ ok: false, message: 'Error al consultar la base de datos.' });
-        }
-        res.json({ ok: true, data: results });
-    });
+// Middlewares de error al final
+app.use((req, res, next) => {
+    res.status(404).json({ ok: false, message: 'Ruta no encontrada.' });
+});
+
+app.use((err, req, res, next) => {
+    console.error('Error general:', err);
+    res.status(500).json({ ok: false, message: 'Error interno del servidor.' });
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception (see stack):', err.stack || err);
 });
 
 const PORT = process.env.PORT || 3001;

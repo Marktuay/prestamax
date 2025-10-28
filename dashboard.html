@@ -95,6 +95,23 @@
                     <tbody></tbody>
                 </table>
             </div>
+
+            <div class="section">
+                <h2>Alertas de Mensajes Sospechosos</h2>
+                <button onclick="loadLogs()">Cargar Alertas</button>
+                <table id="logsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Detalles</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
     <footer>
@@ -139,6 +156,7 @@
                             document.getElementById('loginError').textContent = '';
                             loadConsultas();
                             loadContactos();
+                            loadLogs();
                             document.getElementById('logoutBtn').style.display = 'inline-block';
                             resetInactivityTimer();
                         } else {
@@ -173,6 +191,49 @@
         let contactosSortDir = 1;
         let contactosPage = 1;
         const contactosPageSize = 10;
+
+        let logsData = [];
+        async function loadLogs() {
+            try {
+                const response = await fetch('http://localhost:3001/debug/logs', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    logsData = data.data;
+                    displayLogsTable('logsTable', logsData, ['id', 'username', 'action', 'details', 'fecha']);
+                    showToast('Alertas cargadas correctamente');
+                } else {
+                    alert('Error al cargar alertas: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            }
+        }
+        function displayLogsTable(tableId, data, columns) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = columns.length;
+                td.style.textAlign = 'center';
+                td.textContent = 'No se encontraron alertas.';
+                td.title = 'No se encontró ningún dato que coincida.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = row[col] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
 
         function displayTable(tableId, data, columns) {
             const tbody = document.querySelector(`#${tableId} tbody`);

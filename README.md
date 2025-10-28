@@ -45,7 +45,7 @@ prestamax/
 - **consultas-form.js**: Validación y envío de formulario de consultas/reclamos.
 - **hamburger-menu.js**: Menú responsivo.
 - **cookies.js**: Banner y gestión de cookies.
-- **prestamax-backend/index.js**: Backend Express para recibir y guardar datos en MySQL, autenticación, logs y seguridad.
+- **prestamax-backend/index.js**: Backend Express para recibir y guardar datos en MySQL, autenticación, logs, seguridad y detección de mensajes sospechosos.
 
 
 ## Enlaces rápidos
@@ -64,12 +64,14 @@ prestamax/
 - **Notificaciones**: Mensajes tipo toast al cargar, exportar o cerrar sesión.
 - **Cierre por inactividad**: La sesión se cierra automáticamente tras 10 minutos sin actividad.
 - **Estructura para logs y roles**: Listo para agregar logs de actividad y gestión de usuarios con privilegios.
+- **Alertas de mensajes sospechosos**: El backend detecta palabras clave en los mensajes y los registra en la tabla logs. Puedes visualizar estas alertas en el dashboard.
 
 ## Diagnóstico y verificación del backend
 
 - Para comprobar que el backend y la base de datos funcionan correctamente, puedes acceder a las rutas de diagnóstico:
   - [http://localhost:3001/debug/last-contact](http://localhost:3001/debug/last-contact): Últimos 10 registros del formulario de contacto.
   - [http://localhost:3001/debug/consultas](http://localhost:3001/debug/consultas): Últimos 10 registros del formulario de consultas/reclamos.
+  - [http://localhost:3001/debug/logs](http://localhost:3001/debug/logs): Últimas alertas de mensajes sospechosos detectados por IA.
 
 - En la terminal donde ejecutas el backend (`node index.js`) verás logs de cada petición recibida y cualquier error de MySQL.
 
@@ -77,6 +79,7 @@ prestamax/
   ```bash
   mysql -u root -p -D prestamax -e "SELECT * FROM correos ORDER BY id DESC LIMIT 10;"
   mysql -u root -p -D prestamax -e "SELECT * FROM consultas ORDER BY id DESC LIMIT 10;"
+  mysql -u root -p -D prestamax -e "SELECT * FROM logs WHERE action = 'mensaje_sospechoso' ORDER BY fecha DESC LIMIT 10;"
   ```
 
 ## Instalación y ejecución
@@ -154,6 +157,7 @@ prestamax/
 - El archivo `.env` nunca debe subirse a GitHub (está en `.gitignore`).
 - El frontend nunca se conecta directo a MySQL, solo al backend por HTTP.
 - Para migrar a la nube, solo cambia la configuración en `.env` o en el panel de tu proveedor.
+- La detección de mensajes sospechosos ayuda a prevenir fraudes y mejorar la seguridad del sistema.
 
 ## Notas
 - El dashboard incluye estructura para roles y logs, y puede ampliarse fácilmente para administración avanzada.
@@ -173,14 +177,16 @@ prestamax/
 - Notificaciones tipo toast para acciones y errores.
 - Cierre automático de sesión por inactividad (10 min).
 - Interfaz moderna y responsiva (dashboard.css).
+- Visualización de alertas de mensajes sospechosos detectados por IA.
 
 ### Backend (prestamax-backend/index.js)
 - Node.js + Express + MySQL2.
 - Autenticación básica con usuarios y contraseñas hasheadas (bcrypt).
 - Validación de datos (express-validator).
-- Rutas protegidas para consultas y contactos.
+- Rutas protegidas para consultas, contactos y logs.
 - Creación automática de tablas: usuarios, logs, consultas, correos.
-- Registro de logs de acceso y acciones.
+- Registro de logs de acceso, acciones y alertas de mensajes sospechosos.
+- Detección automática de mensajes sospechosos por palabras clave.
 
 ### Base de datos
 - Tablas: usuarios, logs, consultas, correos.
@@ -193,6 +199,7 @@ prestamax/
 3. **Gestión de logs**: Sección exclusiva para admins con historial de accesos y acciones.
 4. **Mejoras visuales**: Optimizar responsividad y experiencia de usuario.
 5. **Auditoría y seguridad**: Validaciones extra y registro de cambios.
+6. **Mejorar la detección de anomalías**: Integrar modelos de IA más avanzados para análisis de patrones y prevención de fraude.
 
 ### Para retomar el desarrollo
 - El dashboard y backend están listos para ampliar con CRUD y roles.
