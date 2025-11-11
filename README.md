@@ -1,5 +1,147 @@
 # Prestamax
 
+Proyecto web para simulación de préstamos, recepción de contactos y consultas/reclamos, y un dashboard administrativo para revisarlos.
+
+Este README fue actualizado para reflejar cambios recientes en el backend (autenticación por JWT, endpoints de diagnóstico, soporte para Docker MySQL) y las utilidades añadidas (script para crear/actualizar usuarios y docker-compose para la base de datos).
+
+## Resumen rápido
+- Backend: Node.js + Express, MySQL (mysql2), validación con express-validator, hashing con bcrypt, autenticación JWT con `jsonwebtoken`.
+- Persistencia: MySQL (es recomendable usar Docker Compose incluido para desarrollo).
+- Autenticación: POST `/login` devuelve token JWT (Bearer). Endpoints administrativos protegidos aceptan Bearer JWT o Basic como fallback.
+
+## Estructura del proyecto
+
+```
+prestamax/
+├── index.html
+├── consultas-reclamos.html
+├── dashboard.html
+├── privacy-policy.html
+├── terms.html
+├── js/
+├── css/
+├── images/
+└── prestamax-backend/
+  ├── index.js
+  ├── package.json
+  ├── .env.example
+  └── db-init/ (scripts SQL para inicializar la base en Docker)
+```
+
+## Qué cambió (puntos clave)
+- Se añadió `docker-compose.yml` en la raíz y `prestamax-backend/db-init/init.sql` para crear la base `prestamax` y las tablas necesarias automáticamente al iniciar el contenedor MySQL.
+- Se implementó un endpoint de login: POST `/login` que devuelve un JWT (expira en 1h). Los endpoints administrativos (`/debug/*`) aceptan `Authorization: Bearer <token>`.
+- Se agregó un script utilitario `prestamax-backend/scripts/create_user.js` y un npm script `create-user` para crear/actualizar usuarios en la tabla `usuarios` con contraseña hasheada.
+- Se añadió `/health` para comprobaciones rápidas.
+
+## Requisitos
+- Node.js 16+ (o LTS recomendable)
+- npm
+- Docker Desktop (recomendado para levantar MySQL localmente) o MySQL instalado en la máquina
+
+## Configuración y puesta en marcha (recomendado: Docker)
+
+1) Copia o revisa el archivo de ejemplo de variables de entorno:
+
+```env
+# presta max backend (ejemplo)
+DB_HOST=127.0.0.1
+DB_USER=admin
+DB_PASS=prestamax2025
+DB_NAME=prestamax
+DB_PORT=3306
+JWT_SECRET=ChangeMeToAStrongSecret
+PORT=3001
+```
+
+2) Arrancar MySQL con Docker (desde la raíz del repo):
+
+```powershell
+# Levanta el servicio MySQL (contenerizado) y ejecuta los scripts de init
+docker compose up -d
+```
+
+El `docker-compose.yml` monta `prestamax-backend/db-init` en `/docker-entrypoint-initdb.d`, por lo que la base y las tablas se crean al primer arranque.
+
+3) Instalar dependencias y arrancar el backend:
+
+```powershell
+cd prestamax-backend
+npm install
+node index.js
+# o si tienes definido npm start: npm start
+```
+
+4) Crear o actualizar el usuario admin (ejemplo):
+
+```powershell
+# Desde la carpeta prestamax-backend
+npm run create-user -- --username admin --password "PresMaxTa25!"
+```
+
+5) Verificar que el backend está arriba:
+
+```powershell
+# Endpoint health
+Invoke-RestMethod -Uri "http://localhost:3001/health" -Method GET
+```
+
+6) Probar login (obtendrás un token JWT):
+
+```powershell
+$body = '{"username":"admin","password":"PresMaxTa25!"}'
+Invoke-RestMethod -Uri "http://localhost:3001/login" -Method POST -ContentType "application/json" -Body $body
+```
+
+La respuesta contiene { ok: true, token: "..." } — usa ese token en el header Authorization: Bearer <token> al consultar `/debug/*`.
+
+## Endpoints útiles
+- POST /contact — guarda mensajes desde el formulario público.
+- POST /consultas — guarda consultas/reclamos.
+- POST /login — devuelve JWT si las credenciales son correctas.
+- GET /health — estado del servicio.
+- GET /debug/last-contact — (protegido) últimos contactos.
+- GET /debug/consultas — (protegido) últimas consultas.
+- GET /debug/logs — (protegido) logs/alertas (mensajes sospechosos).
+
+Protección: los endpoints `/debug/*` requieren `Authorization` con Bearer token (JWT) o, como fallback, Basic Auth (usuario:contraseña en base64).
+
+## Dashboard (cliente)
+- `dashboard.html` fue actualizado para usar el endpoint `/login` y enviar el token JWT en `Authorization: Bearer <token>` cuando realiza peticiones administrativas.
+- Para depuración rápida en local puedes abrir `dashboard.html` desde el filesystem, pero para un entorno parecido a producción sirve desplegar el frontend y apuntarlo al backend (cambiar la URL en los scripts si es necesario).
+
+## Base de datos (si no usas Docker)
+Si prefieres instalar MySQL localmente, crea la base y tablas (ejemplo):
+
+```sql
+CREATE DATABASE prestamax;
+USE prestamax;
+-- correos, consultas, usuarios, logs (ver archivo prestamax-backend/db-init/init.sql para la estructura exacta)
+```
+
+## Seguridad y recomendaciones
+- Cambia `JWT_SECRET` por un secreto fuerte en producción y no lo subas a Git.
+- Ejecuta el backend detrás de HTTPS en producción.
+- Añadir `helmet` y `express-rate-limit` en el backend mejora la seguridad (podemos agregarlo si quieres).
+- Limita CORS al dominio del frontend en producción.
+- Considerar rotación de claves y mecanismo de revocación/blacklist para tokens si fuera necesario.
+
+## Diagnóstico y troubleshooting
+- Si `docker compose up` falla en Windows, asegúrate de que Docker Desktop esté en ejecución.
+- Si `node index.js` lanza "Cannot find module 'dotenv'", ejecuta `npm install` en `prestamax-backend`.
+- Si `/login` devuelve 404 revisa que el backend ejecutado sea la versión actual que incluye el endpoint (el `index.js` actualizado coloca /login antes del middleware 404).
+
+## Desarrollo y próximos pasos
+- Añadir helmet + rate-limit, forzar HTTPS y restringir CORS.
+- Añadir tests unitarios para rutas críticas (login, inserciones de forms) y un test de integración rápido.
+- Implementar manejo de roles y UI de administración de usuarios.
+
+---
+
+**Autor:** Ing. Marcelo Martinez Vallecillo / marktuay@gmail.com
+**Fecha actualización:** 2025-11-11
+# Prestamax
+
 Proyecto web para simulación de préstamos, gestión de consultas/reclamos y dashboard administrativo.
 
 ## Estructura del proyecto

@@ -119,12 +119,12 @@
     </footer>
     <div id="toast" class="toast" style="display:none;"></div>
     <script>
-        let authHeader = '';
+    let authToken = '';
         document.addEventListener('DOMContentLoaded', function() {
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.onclick = function() {
-                    authHeader = '';
+                    authToken = '';
                     document.getElementById('dashboardContent').style.display = 'none';
                     showLoginSection();
                     document.getElementById('user').value = '';
@@ -137,20 +137,17 @@
             event.preventDefault();
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
-            authHeader = 'Basic ' + btoa(user + ':' + pass);
-            fetch('http://localhost:3001/debug/consultas', {
-                headers: { 'Authorization': authHeader }
+            // Call /login to get a JWT
+            fetch('http://localhost:3001/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
             }).then(async res => {
-                if (res.status === 401) {
-                    document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
-                    document.getElementById('dashboardContent').style.display = 'none';
-                    showLoginSection();
-                    return;
-                }
                 if (res.status === 200) {
                     try {
                         const data = await res.json();
-                        if (data && data.ok) {
+                        if (data && data.ok && data.token) {
+                            authToken = data.token;
                             hideLoginSection();
                             document.getElementById('dashboardContent').style.display = 'block';
                             document.getElementById('loginError').textContent = '';
@@ -161,14 +158,15 @@
                             resetInactivityTimer();
                         } else {
                             document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
-                            document.getElementById('dashboardContent').style.display = 'none';
-                            showLoginSection();
-                            document.getElementById('logoutBtn').style.display = 'none';
                         }
                     } catch (e) {
                         document.getElementById('loginError').textContent = 'Error procesando la respuesta.';
                         document.getElementById('dashboardContent').style.display = 'none';
                     }
+                } else if (res.status === 401) {
+                    document.getElementById('loginError').textContent = 'Credenciales incorrectas. Intenta nuevamente.';
+                    document.getElementById('dashboardContent').style.display = 'none';
+                    showLoginSection();
                 } else {
                     document.getElementById('loginError').textContent = 'Error inesperado.';
                     document.getElementById('dashboardContent').style.display = 'none';
@@ -196,7 +194,7 @@
         async function loadLogs() {
             try {
                 const response = await fetch('http://localhost:3001/debug/logs', {
-                    headers: { 'Authorization': authHeader }
+                    headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
                 if (data.ok) {
@@ -438,7 +436,7 @@
         async function loadConsultas() {
             try {
                 const response = await fetch('http://localhost:3001/debug/consultas', {
-                    headers: { 'Authorization': authHeader }
+                    headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
                 if (data.ok) {
@@ -459,7 +457,7 @@
         async function loadContactos() {
             try {
                 const response = await fetch('http://localhost:3001/debug/last-contact', {
-                    headers: { 'Authorization': authHeader }
+                    headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
                 if (data.ok) {
@@ -633,7 +631,7 @@
         function resetInactivityTimer() {
             clearTimeout(inactivityTimeout);
             inactivityTimeout = setTimeout(() => {
-                authHeader = '';
+                authToken = '';
                 document.getElementById('dashboardContent').style.display = 'none';
                 showLoginSection();
                 document.getElementById('user').value = '';

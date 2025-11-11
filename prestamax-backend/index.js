@@ -1,21 +1,59 @@
+// If a .env file is not present but .env.example exists, copy it to .env
+// to help developers bootstrap the project (won't overwrite an existing .env).
+const fs = require('fs');
+const path = require('path');
+const envPath = path.join(__dirname, '.env');
+const envExamplePath = path.join(__dirname, '.env.example');
+try {
+    if (!fs.existsSync(envPath) && fs.existsSync(envExamplePath)) {
+        const example = fs.readFileSync(envExamplePath, 'utf8');
+        fs.writeFileSync(envPath, example, { encoding: 'utf8', flag: 'wx' });
+        console.log('Se ha creado un archivo .env desde .env.example (no fue sobrescrito). Revísalo y actualiza las credenciales.');
+    }
+} catch (e) {
+    // If write fails, continue — dotenv will still try to load environment variables.
+    console.warn('No se pudo crear .env automáticamente:', e.message || e);
+}
 require('dotenv').config();
 const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Database configuration: prefer values from environment variables.
+// Avoid hardcoding real credentials here. Provide sane defaults only for
+// host/port so development is easy; require user/password/db name from env
+// (warn in development, throw in production).
 const dbConfig = {
     host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'admin', // Solo para desarrollo
-    password: process.env.DB_PASS || 'prestamax2025', // Solo para desarrollo
-    database: process.env.DB_NAME || 'prestamax',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3305
+    user: process.env.DB_USER || '',
+    password: process.env.DB_PASS || '',
+    database: process.env.DB_NAME || '',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306
 };
+
+// Validate important env vars. In production we fail fast; in development we warn.
+const missing = [];
+if (!dbConfig.user) missing.push('DB_USER');
+if (!dbConfig.password) missing.push('DB_PASS');
+if (!dbConfig.database) missing.push('DB_NAME');
+if (missing.length > 0) {
+    const msg = `Missing required DB env vars: ${missing.join(', ')}. Please create a .env file (see .env.example) or export these variables.`;
+    if ((process.env.NODE_ENV || 'development') === 'production') {
+        console.error(msg);
+        // Fail fast in production
+        process.exit(1);
+    } else {
+        console.warn(msg);
+        console.warn('Using empty values will likely fail to connect; this is intended only for quick development.');
+    }
+}
 const db = mysql.createPool(dbConfig);
 
 db.getConnection((err, connection) => {
@@ -70,36 +108,54 @@ db.query(`CREATE TABLE IF NOT EXISTS usuarios (
     });
 });
 
-// Middleware de autenticación básica para rutas de diagnóstico (asíncrono)
-const basicAuth = async (req, res, next) => {
+// Authentication middleware supporting Bearer JWT or Basic (fallback).
+const authMiddleware = async (req, res, next) => {
     const auth = req.headers.authorization;
-    if (!auth || !auth.startsWith('Basic ')) {
+    if (!auth) {
         res.set('WWW-Authenticate', 'Basic realm="Dashboard"');
         return res.status(401).send('Autenticación requerida');
     }
-    const credentials = Buffer.from(auth.split(' ')[1], 'base64').toString().split(':');
-    const [user, pass] = credentials;
     try {
-        const [results] = await db.promise().query('SELECT * FROM usuarios WHERE username = ?', [user]);
-        if (results.length > 0) {
-            const hash = results[0].password;
-            const match = await bcrypt.compare(pass, hash);
-            if (match) {
+        // Bearer token path
+        if (auth.startsWith('Bearer ')) {
+            const token = auth.split(' ')[1];
+            const secret = process.env.JWT_SECRET || 'ChangeMeToAStrongSecret';
+            try {
+                const payload = jwt.verify(token, secret);
+                req.user = payload;
                 return next();
-            } else {
-                res.set('WWW-Authenticate', 'Basic realm="Dashboard"');
-                return res.status(401).send('Credenciales incorrectas');
+            } catch (e) {
+                return res.status(401).json({ ok: false, message: 'Token inválido o expirado' });
             }
-        } else {
+        }
+        // Basic auth fallback
+        if (auth.startsWith('Basic ')) {
+            const credentials = Buffer.from(auth.split(' ')[1], 'base64').toString().split(':');
+            const [user, pass] = credentials;
+            const [results] = await db.promise().query('SELECT * FROM usuarios WHERE username = ?', [user]);
+            if (results.length > 0) {
+                const hash = results[0].password;
+                const match = await bcrypt.compare(pass, hash);
+                if (match) {
+                    req.user = { username: user };
+                    return next();
+                }
+            }
             res.set('WWW-Authenticate', 'Basic realm="Dashboard"');
             return res.status(401).send('Credenciales incorrectas');
         }
+        // Unsupported auth scheme
+        res.set('WWW-Authenticate', 'Basic realm="Dashboard"');
+        return res.status(401).send('Autenticación requerida');
     } catch (err) {
         console.error('Error en autenticación:', err);
         res.set('WWW-Authenticate', 'Basic realm="Dashboard"');
         return res.status(500).send('Error interno');
     }
 };
+
+// Keep compatibility variable name used in routes
+const basicAuth = authMiddleware;
 
 // Rutas protegidas y públicas
 app.get('/debug/logs', basicAuth, (req, res) => {
@@ -111,6 +167,11 @@ app.get('/debug/logs', basicAuth, (req, res) => {
         res.json({ ok: true, data: results });
     });
 });
+
+    // Health endpoint - útil para diagnosticar si el servidor Express está arriba
+    app.get('/health', (req, res) => {
+        res.json({ ok: true, server: 'prestamax-backend', env: process.env.NODE_ENV || 'development' });
+    });
 
 app.get('/debug/consultas', basicAuth, (req, res) => {
     db.query('SELECT id, nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha FROM consultas ORDER BY id DESC LIMIT 10', (err, results) => {
@@ -199,6 +260,30 @@ app.post('/contact', [
             res.json({ ok: true, message: 'Datos guardados en MySQL.' });
         }
     );
+});
+// Login endpoint: returns JWT when credentials are valid
+app.post('/login', [
+    body('username').trim().isLength({ min: 1 }),
+    body('password').trim().isLength({ min: 1 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ ok: false, message: 'Datos inválidos.' });
+    const { username, password } = req.body;
+    try {
+        const [results] = await db.promise().query('SELECT * FROM usuarios WHERE username = ?', [username]);
+        if (results.length === 0) return res.status(401).json({ ok: false, message: 'Credenciales incorrectas.' });
+        const hash = results[0].password;
+        const match = await bcrypt.compare(password, hash);
+        if (!match) return res.status(401).json({ ok: false, message: 'Credenciales incorrectas.' });
+        const secret = process.env.JWT_SECRET || 'ChangeMeToAStrongSecret';
+        const token = jwt.sign({ username }, secret, { expiresIn: '1h' });
+        // Log successful login
+        db.query('INSERT INTO logs (username, action, details) VALUES (?, ?, ?)', [username, 'login_success', 'Login vía /login'], (err) => { if (err) console.error('Error guardando log:', err); });
+        res.json({ ok: true, token });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ ok: false, message: 'Error interno' });
+    }
 });
 
 // Middlewares de error al final

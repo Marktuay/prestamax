@@ -1,0 +1,23 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: prestamax-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: RootPass123!
+      MYSQL_DATABASE: prestamax
+      MYSQL_USER: prestamaxuser
+      MYSQL_PASSWORD: prestamaxpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./prestamax-backend/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
