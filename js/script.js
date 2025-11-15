@@ -8,7 +8,8 @@ const tipoPrestamoSelect = document.getElementById('tipo-prestamo');
 const tasaInteresText = document.getElementById('tasa');
 const cuotaElement = document.getElementById('cuota');
 
-if (montoInput && plazoInput && plazoValue && tipoPrestamoSelect && tasaInteresText && cuotaElement) {
+// Only require the essential inputs; `tasa` field is optional (it may be commented out in the HTML)
+if (montoInput && plazoInput && plazoValue && tipoPrestamoSelect && cuotaElement) {
     // Actualizar la tasa de interés según el tipo de préstamo
     function actualizarTasa() {
         const tipoPrestamo = tipoPrestamoSelect.value;
@@ -16,7 +17,9 @@ if (montoInput && plazoInput && plazoValue && tipoPrestamoSelect && tasaInteresT
         if (tipoPrestamo === 'colaboradores') {
             tasaAnual = 0.24; // Colaboradores 24%
         }
-        tasaInteresText.value = `${(tasaAnual * 100).toFixed(0)}%`;
+        if (tasaInteresText) {
+            tasaInteresText.value = `${(tasaAnual * 100).toFixed(0)}%`;
+        }
         calculateMonthlyPayment();
     }
 
@@ -31,6 +34,11 @@ if (montoInput && plazoInput && plazoValue && tipoPrestamoSelect && tasaInteresT
         }
         const monthlyRate = annualRate / 12;
         // Calcular pago mensual: P * r * (1+r)^n / ((1+r)^n - 1)
+        // Guard against invalid input
+        if (!isFinite(principal) || principal <= 0 || !isFinite(months) || months <= 0) {
+            cuotaElement.textContent = `$0.00 USD`;
+            return;
+        }
         const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1);
         cuotaElement.textContent = `$${monthlyPayment.toFixed(2)} USD`;
     }
