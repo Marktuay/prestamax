@@ -18,12 +18,36 @@ require('dotenv').config();
 const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-app.use(cors());
+
+// Security: Apply helmet middleware for security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
+
+// Security: Configure CORS properly
+const corsOptions = {
+    origin: process.env.ALLOWED_ORIGINS ? 
+        process.env.ALLOWED_ORIGINS.split(',') : 
+        (process.env.NODE_ENV === 'production' ? false : '*'),
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // Database configuration: prefer values from environment variables.
@@ -54,6 +78,18 @@ if (missing.length > 0) {
         console.warn('Using empty values will likely fail to connect; this is intended only for quick development.');
     }
 }
+
+// Security: Validate JWT secret
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'ChangeMeToAStrongSecret' || process.env.JWT_SECRET === 'CHANGE_ME_TO_A_STRONG_RANDOM_SECRET_AT_LEAST_64_CHARACTERS') {
+    const msg = 'SECURITY WARNING: JWT_SECRET is not set or using default value! This is a critical security risk. Generate a strong secret with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"';
+    if ((process.env.NODE_ENV || 'development') === 'production') {
+        console.error(msg);
+        process.exit(1);
+    } else {
+        console.warn(msg);
+    }
+}
+
 const db = mysql.createPool(dbConfig);
 
 db.getConnection((err, connection) => {
@@ -86,26 +122,10 @@ db.query(`CREATE TABLE IF NOT EXISTS usuarios (
         console.error('Error creando tabla usuarios:', err);
         return;
     }
-    // Insertar usuario por defecto con contraseña hasheada si no existe (solo para desarrollo)
-    const defaultUser = 'admin';
-    const defaultPass = 'prestamax2025';
-    db.query('SELECT * FROM usuarios WHERE username = ?', [defaultUser], (err, results) => {
-        if (err) {
-            console.error('Error consultando usuario por defecto:', err);
-            return;
-        }
-        if (results.length === 0) {
-            bcrypt.hash(defaultPass, 10, (err, hash) => {
-                if (err) {
-                    console.error('Error generando hash:', err);
-                    return;
-                }
-                db.query('INSERT INTO usuarios (username, password) VALUES (?, ?)', [defaultUser, hash], (err) => {
-                    if (err) console.error('Error insertando usuario por defecto:', err);
-                });
-            });
-        }
-    });
+    // SECURITY WARNING: No default user is created automatically
+    // Use the create_user.js script to create admin accounts:
+    // npm run create-user -- --username admin --password "YourSecurePassword"
+    console.log('Tabla usuarios verificada. Use npm run create-user para crear usuarios.');
 });
 
 // Authentication middleware supporting Bearer JWT or Basic (fallback).
@@ -157,6 +177,24 @@ const authMiddleware = async (req, res, next) => {
 // Keep compatibility variable name used in routes
 const basicAuth = authMiddleware;
 
+// Security: Rate limiting for authentication endpoints
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // 5 login attempts per window
+    message: { ok: false, message: 'Demasiados intentos de inicio de sesión. Intente nuevamente en 15 minutos.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Security: Rate limiting for public form endpoints
+const formLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // 10 submissions per hour per IP
+    message: { ok: false, message: 'Demasiadas solicitudes. Intente nuevamente más tarde.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Rutas protegidas y públicas
 app.get('/debug/logs', basicAuth, (req, res) => {
     db.query("SELECT id, username, action, details, fecha FROM logs WHERE action = 'mensaje_sospechoso' ORDER BY fecha DESC LIMIT 50", (err, results) => {
@@ -193,7 +231,7 @@ app.get('/debug/last-contact', basicAuth, (req, res) => {
     });
 });
 
-app.post('/consultas', [
+app.post('/consultas', formLimiter, [
     body('nombre').trim().isLength({ min: 2, max: 100 }).escape(),
     body('apellido').trim().isLength({ min: 2, max: 100 }).escape(),
     body('producto').isIn(['hipotecario', 'colaborador']),
@@ -220,7 +258,7 @@ app.post('/consultas', [
     );
 });
 
-app.post('/contact', [
+app.post('/contact', formLimiter, [
     body('nombre').trim().isLength({ min: 2, max: 100 }).escape(),
     body('email').isEmail().normalizeEmail(),
     body('telefono').optional({ checkFalsy: true }).isLength({ min: 7, max: 20 }).escape(),
@@ -262,7 +300,7 @@ app.post('/contact', [
     );
 });
 // Login endpoint: returns JWT when credentials are valid
-app.post('/login', [
+app.post('/login', loginLimiter, [
     body('username').trim().isLength({ min: 1 }),
     body('password').trim().isLength({ min: 1 })
 ], async (req, res) => {

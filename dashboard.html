@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">      
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="js/config.js"></script>
 </head>
 <body>
     <header>
@@ -138,7 +139,11 @@
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
             // Call /login to get a JWT
-            fetch('http://localhost:3001/login', {
+            const apiUrl = window.APP_CONFIG ? 
+                window.APP_CONFIG.getEndpoint(window.APP_CONFIG.ENDPOINTS.LOGIN) : 
+                'http://localhost:3001/login';
+            
+            fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: user, password: pass })
@@ -193,7 +198,11 @@
         let logsData = [];
         async function loadLogs() {
             try {
-                const response = await fetch('http://localhost:3001/debug/logs', {
+                const apiUrl = window.APP_CONFIG ? 
+                    window.APP_CONFIG.getEndpoint(window.APP_CONFIG.ENDPOINTS.DEBUG_LOGS) : 
+                    'http://localhost:3001/debug/logs';
+                
+                const response = await fetch(apiUrl, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -435,7 +444,11 @@
 
         async function loadConsultas() {
             try {
-                const response = await fetch('http://localhost:3001/debug/consultas', {
+                const apiUrl = window.APP_CONFIG ? 
+                    window.APP_CONFIG.getEndpoint(window.APP_CONFIG.ENDPOINTS.DEBUG_CONSULTAS) : 
+                    'http://localhost:3001/debug/consultas';
+                
+                const response = await fetch(apiUrl, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -456,7 +469,11 @@
 
         async function loadContactos() {
             try {
-                const response = await fetch('http://localhost:3001/debug/last-contact', {
+                const apiUrl = window.APP_CONFIG ? 
+                    window.APP_CONFIG.getEndpoint(window.APP_CONFIG.ENDPOINTS.DEBUG_LAST_CONTACT) : 
+                    'http://localhost:3001/debug/last-contact';
+                
+                const response = await fetch(apiUrl, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
