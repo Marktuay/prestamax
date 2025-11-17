@@ -4,10 +4,16 @@ services:
     container_name: prestamax-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: RootPass123!
-      MYSQL_DATABASE: prestamax
-      MYSQL_USER: prestamaxuser
-      MYSQL_PASSWORD: prestamaxpass
+      # SECURITY: Use environment variables instead of hardcoded passwords
+      # Create a .env file in the root directory with these values:
+      # MYSQL_ROOT_PASSWORD=<your-strong-password>
+      # MYSQL_DATABASE=prestamax
+      # MYSQL_USER=prestamaxuser
+      # MYSQL_PASSWORD=<your-strong-password>
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-CHANGE_ME_IN_PRODUCTION}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-prestamax}
+      MYSQL_USER: ${MYSQL_USER:-prestamaxuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-CHANGE_ME_IN_PRODUCTION}
     ports:
       - "3306:3306"
     volumes:

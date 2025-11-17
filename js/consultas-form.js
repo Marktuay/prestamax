@@ -30,7 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enviar al backend
     try {
-      const res = await fetch('http://localhost:3001/consultas', {
+      // Use configuration for API URL
+      const apiUrl = window.APP_CONFIG ? 
+          window.APP_CONFIG.getEndpoint(window.APP_CONFIG.ENDPOINTS.CONSULTAS) : 
+          'http://localhost:3001/consultas';
+      
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nombre, apellido, producto, tipoAsunto, descripcion, contacto, email })
