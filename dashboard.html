@@ -138,7 +138,7 @@
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
             // Call /login to get a JWT
-            fetch('http://localhost:3001/login', {
+            fetch('http://localhost:3002/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: user, password: pass })
@@ -193,7 +193,7 @@
         let logsData = [];
         async function loadLogs() {
             try {
-                const response = await fetch('http://localhost:3001/debug/logs', {
+                const response = await fetch('http://localhost:3002/debug/logs', {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -435,7 +435,7 @@
 
         async function loadConsultas() {
             try {
-                const response = await fetch('http://localhost:3001/debug/consultas', {
+                const response = await fetch('http://localhost:3002/debug/consultas', {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -456,7 +456,7 @@
 
         async function loadContactos() {
             try {
-                const response = await fetch('http://localhost:3001/debug/last-contact', {
+                const response = await fetch('http://localhost:3002/debug/last-contact', {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();

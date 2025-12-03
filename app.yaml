@@ -1,0 +1,44 @@
+runtime: nodejs18
+
+instance_class: F1
+
+# Variables de entorno - REEMPLAZAR CON TUS VALORES
+env_variables:
+  DB_HOST: "/cloudsql/YOUR_PROJECT_ID:YOUR_REGION:prestamax-db"
+  DB_USER: "prestamaxuser"
+  DB_PASS: "YOUR_DB_PASSWORD"
+  DB_NAME: "prestamax"
+  JWT_SECRET: "YOUR_JWT_SECRET_HERE"
+  NODE_ENV: "production"
+
+# Conexión a Cloud SQL
+beta_settings:
+  cloud_sql_instances: "YOUR_PROJECT_ID:YOUR_REGION:prestamax-db"
+
+# Configuración de archivos estáticos
+handlers:
+# Archivos CSS
+- url: /css
+  static_dir: css
+  secure: always
+
+# Archivos JavaScript
+- url: /js
+  static_dir: js
+  secure: always
+
+# Imágenes
+- url: /images
+  static_dir: images
+  secure: always
+
+# Archivos HTML estáticos
+- url: /(.*\.(html|ico|txt))
+  static_files: \1
+  upload: .*\.(html|ico|txt)
+  secure: always
+
+# API y páginas dinámicas
+- url: /.*
+  script: auto
+  secure: always

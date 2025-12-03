@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Enviar al backend
     try {
-      const res = await fetch('http://localhost:3001/consultas', {
+      const res = await fetch('http://localhost:3002/consultas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nombre, apellido, producto, tipoAsunto, descripcion, contacto, email })

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = { nombre, email, telefono, producto, mensaje };
-            const res = await fetch('http://localhost:3001/contact', {
+            const res = await fetch('http://localhost:3002/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
