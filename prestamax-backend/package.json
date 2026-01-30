@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "create-user": "node scripts/create_user.js",
+    "convert-excel": "node scripts/excel_to_woocommerce.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,8 +18,9 @@
     "dotenv": "^16.0.0",
     "express": "^5.1.0",
     "express-validator": "^7.3.0",
+    "jsonwebtoken": "^9.0.0",
     "mysql2": "^3.14.5",
-    "jsonwebtoken": "^9.0.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

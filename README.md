@@ -33,6 +33,7 @@ prestamax/
 - Se implementó un endpoint de login: POST `/login` que devuelve un JWT (expira en 1h). Los endpoints administrativos (`/debug/*`) aceptan `Authorization: Bearer <token>`.
 - Se agregó un script utilitario `prestamax-backend/scripts/create_user.js` y un npm script `create-user` para crear/actualizar usuarios en la tabla `usuarios` con contraseña hasheada.
 - Se añadió `/health` para comprobaciones rápidas.
+- **NUEVO:** Herramienta de conversión de Excel a formato de importación de WooCommerce (`excel_to_woocommerce.js`) - Ver documentación en [EXCEL_TO_WOOCOMMERCE.md](prestamax-backend/EXCEL_TO_WOOCOMMERCE.md)
 
 ## Requisitos
 - Node.js 16+ (o LTS recomendable)
@@ -130,6 +131,26 @@ USE prestamax;
 - Si `docker compose up` falla en Windows, asegúrate de que Docker Desktop esté en ejecución.
 - Si `node index.js` lanza "Cannot find module 'dotenv'", ejecuta `npm install` en `prestamax-backend`.
 - Si `/login` devuelve 404 revisa que el backend ejecutado sea la versión actual que incluye el endpoint (el `index.js` actualizado coloca /login antes del middleware 404).
+
+## Utilidades adicionales
+
+### Conversor Excel a WooCommerce
+El proyecto incluye una herramienta para convertir archivos Excel con inventario al formato de importación de productos de WooCommerce.
+
+**Uso rápido:**
+```bash
+cd prestamax-backend
+npm run convert-excel -- -i tu_inventario.xlsx -o productos_woocommerce.csv
+```
+
+**Documentación completa:** Ver [EXCEL_TO_WOOCOMMERCE.md](prestamax-backend/EXCEL_TO_WOOCOMMERCE.md)
+
+**Características:**
+- Mapeo automático de campos comunes (SKU, Nombre, Precio, Stock, etc.)
+- Soporte para 85+ campos de WooCommerce
+- Limpieza automática de precios y formateo de datos
+- Valores por defecto configurables
+- Archivo de ejemplo incluido para pruebas
 
 ## Desarrollo y próximos pasos
 - Añadir helmet + rate-limit, forzar HTTPS y restringir CORS.
