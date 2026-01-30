@@ -103,12 +103,14 @@ La respuesta contiene { ok: true, token: "..." } — usa ese token en el header 
 - GET /debug/last-contact — (protegido) últimos contactos.
 - GET /debug/consultas — (protegido) últimas consultas.
 - GET /debug/logs — (protegido) logs/alertas (mensajes sospechosos).
+- POST /import-excel — (protegido) importa filas desde el dashboard (envía JSON con tipo y rows).
 
 Protección: los endpoints `/debug/*` requieren `Authorization` con Bearer token (JWT) o, como fallback, Basic Auth (usuario:contraseña en base64).
 
 ## Dashboard (cliente)
 - `dashboard.html` fue actualizado para usar el endpoint `/login` y enviar el token JWT en `Authorization: Bearer <token>` cuando realiza peticiones administrativas.
 - Para depuración rápida en local puedes abrir `dashboard.html` desde el filesystem, pero para un entorno parecido a producción sirve desplegar el frontend y apuntarlo al backend (cambiar la URL en los scripts si es necesario).
+- Para configurar el endpoint del backend sin editar el archivo, define `window.PRESTAMAX_API_BASE` antes de cargar `dashboard.html` (por defecto usa `http://localhost:3002`).
 
 ## Base de datos (si no usas Docker)
 Si prefieres instalar MySQL localmente, crea la base y tablas (ejemplo):

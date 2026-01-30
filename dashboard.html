@@ -28,6 +28,26 @@
         <div id="dashboardContent" style="display:none;">
             <div id="dashboardIndicators" class="indicators" style="display:none; margin-bottom:24px;"></div>
             <div class="section">
+                <h2>Importar archivos Excel</h2>
+                <p class="helper-text">Selecciona un archivo Excel (.xlsx) con las columnas correctas para importar consultas o contactos.</p>
+                <ul class="import-notes">
+                    <li><strong>Consultas:</strong> nombre, apellido, producto, tipoAsunto/tipo_asunto, descripcion, contacto, email.</li>
+                    <li><strong>Contactos:</strong> nombre, email, telefono, producto, mensaje.</li>
+                </ul>
+                <div class="import-controls">
+                    <label for="excelTipo">Tipo de importación:
+                        <select id="excelTipo">
+                            <option value="consultas">Consultas/Reclamos</option>
+                            <option value="contactos">Contactos</option>
+                        </select>
+                    </label>
+                    <input type="file" id="excelFile" accept=".xlsx,.xls">
+                    <button onclick="handleExcelUpload()">Subir y procesar</button>
+                </div>
+                <div id="excelStatus" class="import-status" aria-live="polite"></div>
+            </div>
+
+            <div class="section">
                 <h2>Últimos Registros de Consultas/Reclamos/Quejas</h2>
                 <div class="filters-advanced">
                     <label>Fecha desde: <input type="date" id="filterFechaDesde" onchange="applyAdvancedFilters()"></label>
@@ -138,7 +158,7 @@
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
             // Call /login to get a JWT
-            fetch('http://localhost:3002/login', {
+            fetch(`${getApiBase()}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: user, password: pass })
@@ -193,7 +213,7 @@
         let logsData = [];
         async function loadLogs() {
             try {
-                const response = await fetch('http://localhost:3002/debug/logs', {
+                const response = await fetch(`${getApiBase()}/debug/logs`, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -435,7 +455,7 @@
 
         async function loadConsultas() {
             try {
-                const response = await fetch('http://localhost:3002/debug/consultas', {
+                const response = await fetch(`${getApiBase()}/debug/consultas`, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -456,7 +476,7 @@
 
         async function loadContactos() {
             try {
-                const response = await fetch('http://localhost:3002/debug/last-contact', {
+                const response = await fetch(`${getApiBase()}/debug/last-contact`, {
                     headers: { 'Authorization': 'Bearer ' + authToken }
                 });
                 const data = await response.json();
@@ -586,6 +606,66 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, tableId);
             XLSX.writeFile(workbook, tableId + '.xlsx');
+        }
+
+        async function handleExcelUpload() {
+            const fileInput = document.getElementById('excelFile');
+            const tipo = document.getElementById('excelTipo').value;
+            const status = document.getElementById('excelStatus');
+            status.textContent = '';
+            const file = fileInput.files[0];
+            if (!file) {
+                status.textContent = 'Selecciona un archivo Excel para continuar.';
+                return;
+            }
+            try {
+                const maxSize = 2 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    status.textContent = 'El archivo supera el tamaño máximo permitido (2MB).';
+                    return;
+                }
+                const buffer = await file.arrayBuffer();
+                const workbook = XLSX.read(buffer, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                if (!sheetName) {
+                    status.textContent = 'El archivo no tiene hojas válidas.';
+                    return;
+                }
+                const sheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                if (!rows.length) {
+                    status.textContent = 'No se encontraron filas en el archivo.';
+                    return;
+                }
+                status.textContent = 'Subiendo archivo...';
+                const response = await fetch(`${getApiBase()}/import-excel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ tipo, rows })
+                });
+                const data = await response.json();
+                if (response.ok && data.ok) {
+                    status.textContent = `Importación completada. Filas importadas: ${data.imported}.`;
+                    fileInput.value = '';
+                    if (tipo === 'consultas') {
+                        await loadConsultas();
+                    } else {
+                        await loadContactos();
+                    }
+                } else {
+                    const detail = data.errors ? data.errors.join(' | ') : (data.message || 'Error en la importación.');
+                    status.textContent = `No se pudo importar: ${detail}`;
+                }
+            } catch (error) {
+                status.textContent = `Error procesando el archivo: ${error.message}`;
+            }
+        }
+
+        function getApiBase() {
+            return window.PRESTAMAX_API_BASE || 'http://localhost:3002';
         }
 
         function applyAdvancedFilters() {
