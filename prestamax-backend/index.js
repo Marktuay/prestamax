@@ -20,6 +20,7 @@ const express = require('express');
 const cors = require('cors');
 const { body, validationResult } = require('express-validator');
 const validator = require('validator');
+const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -158,8 +159,24 @@ const authMiddleware = async (req, res, next) => {
 // Keep compatibility variable name used in routes
 const basicAuth = authMiddleware;
 
+const importLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, message: 'Demasiadas solicitudes, inténtalo más tarde.' }
+});
+
+const adminLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, message: 'Demasiadas solicitudes, inténtalo más tarde.' }
+});
+
 // Rutas protegidas y públicas
-app.get('/debug/logs', basicAuth, (req, res) => {
+app.get('/debug/logs', basicAuth, adminLimiter, (req, res) => {
     db.query("SELECT id, username, action, details, fecha FROM logs WHERE action = 'mensaje_sospechoso' ORDER BY fecha DESC LIMIT 50", (err, results) => {
         if (err) {
             console.error('MySQL select error (logs):', err);
@@ -174,7 +191,7 @@ app.get('/debug/logs', basicAuth, (req, res) => {
         res.json({ ok: true, server: 'prestamax-backend', env: process.env.NODE_ENV || 'development' });
     });
 
-app.get('/debug/consultas', basicAuth, (req, res) => {
+app.get('/debug/consultas', basicAuth, adminLimiter, (req, res) => {
     db.query('SELECT id, nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha FROM consultas ORDER BY id DESC LIMIT 10', (err, results) => {
         if (err) {
             console.error('MySQL select error (consultas):', err);
@@ -184,7 +201,7 @@ app.get('/debug/consultas', basicAuth, (req, res) => {
     });
 });
 
-app.get('/debug/last-contact', basicAuth, (req, res) => {
+app.get('/debug/last-contact', basicAuth, adminLimiter, (req, res) => {
     db.query('SELECT id, nombre, email, telefono, producto, mensaje, fecha FROM correos ORDER BY id DESC LIMIT 10', (err, results) => {
         if (err) {
             console.error('MySQL select error:', err);
@@ -200,7 +217,7 @@ const sanitizeText = (value) => validator.escape(normalizeText(value));
 const isValidEmail = (value) => /^\S+@\S+\.\S+$/.test(value);
 const isValidLength = (value, min, max) => value.length >= min && value.length <= max;
 
-app.post('/import-excel', basicAuth, [
+app.post('/import-excel', basicAuth, importLimiter, [
     body('tipo').isIn(['consultas', 'contactos']),
     body('rows').isArray({ min: 1, max: MAX_IMPORT_ROWS })
 ], (req, res) => {
