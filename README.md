@@ -43,16 +43,6 @@ prestamax/
 
 1) Copia o revisa el archivo de ejemplo de variables de entorno:
 
-```env
-# presta max backend (ejemplo)
-DB_HOST=127.0.0.1
-DB_USER=admin
-DB_PASS=prestamax2025
-DB_NAME=prestamax
-DB_PORT=3306
-JWT_SECRET=ChangeMeToAStrongSecret
-PORT=3001
-```
 
 2) Arrancar MySQL con Docker (desde la raíz del repo):
 
