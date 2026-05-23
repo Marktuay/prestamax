@@ -1,4 +1,4 @@
-dime como lvantamos# Prestamax
+
 
 Proyecto web para simulación de préstamos, recepción de contactos y consultas/reclamos, y un dashboard administrativo para revisarlos.
 
