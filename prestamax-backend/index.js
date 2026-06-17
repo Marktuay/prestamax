@@ -19,12 +19,14 @@ const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
 const { body, validationResult } = require('express-validator');
+const validator = require('validator');
+const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 // Database configuration: prefer values from environment variables.
 // Avoid hardcoding real credentials here. Provide sane defaults only for
@@ -157,8 +159,24 @@ const authMiddleware = async (req, res, next) => {
 // Keep compatibility variable name used in routes
 const basicAuth = authMiddleware;
 
+const importLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, message: 'Demasiadas solicitudes, inténtalo más tarde.' }
+});
+
+const adminLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, message: 'Demasiadas solicitudes, inténtalo más tarde.' }
+});
+
 // Rutas protegidas y públicas
-app.get('/debug/logs', basicAuth, (req, res) => {
+app.get('/debug/logs', basicAuth, adminLimiter, (req, res) => {
     db.query("SELECT id, username, action, details, fecha FROM logs WHERE action = 'mensaje_sospechoso' ORDER BY fecha DESC LIMIT 50", (err, results) => {
         if (err) {
             console.error('MySQL select error (logs):', err);
@@ -173,7 +191,7 @@ app.get('/debug/logs', basicAuth, (req, res) => {
         res.json({ ok: true, server: 'prestamax-backend', env: process.env.NODE_ENV || 'development' });
     });
 
-app.get('/debug/consultas', basicAuth, (req, res) => {
+app.get('/debug/consultas', basicAuth, adminLimiter, (req, res) => {
     db.query('SELECT id, nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha FROM consultas ORDER BY id DESC LIMIT 10', (err, results) => {
         if (err) {
             console.error('MySQL select error (consultas):', err);
@@ -183,7 +201,7 @@ app.get('/debug/consultas', basicAuth, (req, res) => {
     });
 });
 
-app.get('/debug/last-contact', basicAuth, (req, res) => {
+app.get('/debug/last-contact', basicAuth, adminLimiter, (req, res) => {
     db.query('SELECT id, nombre, email, telefono, producto, mensaje, fecha FROM correos ORDER BY id DESC LIMIT 10', (err, results) => {
         if (err) {
             console.error('MySQL select error:', err);
@@ -191,6 +209,115 @@ app.get('/debug/last-contact', basicAuth, (req, res) => {
         }
         res.json({ ok: true, data: results });
     });
+});
+
+const MAX_IMPORT_ROWS = 100;
+const normalizeText = (value) => String(value ?? '').trim();
+const sanitizeText = (value) => validator.escape(normalizeText(value));
+const isValidEmail = (value) => /^\S+@\S+\.\S+$/.test(value);
+const isValidLength = (value, min, max) => value.length >= min && value.length <= max;
+
+app.post('/import-excel', basicAuth, importLimiter, [
+    body('tipo').isIn(['consultas', 'contactos']),
+    body('rows').isArray({ min: 1, max: MAX_IMPORT_ROWS })
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ ok: false, message: 'Datos inválidos.', errors: errors.array() });
+    }
+    const { tipo, rows } = req.body;
+    const rowErrors = [];
+    const validRows = rows.map((row, index) => {
+        const nombre = sanitizeText(row.nombre);
+        const producto = normalizeText(row.producto).toLowerCase();
+        const email = normalizeText(row.email).toLowerCase();
+        if (tipo === 'consultas') {
+            const apellido = sanitizeText(row.apellido);
+            const tipoAsunto = normalizeText(row.tipoAsunto || row.tipo_asunto).toLowerCase();
+            const descripcion = sanitizeText(row.descripcion);
+            const contacto = sanitizeText(row.contacto);
+            const currentErrors = [];
+            if (!isValidLength(nombre, 2, 100)) currentErrors.push('Nombre inválido');
+            if (!isValidLength(apellido, 2, 100)) currentErrors.push('Apellido inválido');
+            if (!['hipotecario', 'colaborador'].includes(producto)) currentErrors.push('Producto inválido');
+            if (!['consulta', 'reclamo', 'queja'].includes(tipoAsunto)) currentErrors.push('Tipo de asunto inválido');
+            if (!isValidLength(descripcion, 5, 1000)) currentErrors.push('Descripción inválida');
+            if (contacto && !isValidLength(contacto, 7, 20)) currentErrors.push('Contacto inválido');
+            if (!isValidEmail(email)) currentErrors.push('Email inválido');
+            if (currentErrors.length > 0) {
+                rowErrors.push(`Fila ${index + 1}: ${currentErrors.join(', ')}`);
+                return null;
+            }
+            return { nombre, apellido, producto, tipoAsunto, descripcion, contacto: contacto || null, email };
+        }
+        const mensaje = sanitizeText(row.mensaje);
+        const telefono = sanitizeText(row.telefono);
+        const currentErrors = [];
+        if (!isValidLength(nombre, 2, 100)) currentErrors.push('Nombre inválido');
+        if (!['hipotecario', 'colaborador'].includes(producto)) currentErrors.push('Producto inválido');
+        if (!isValidEmail(email)) currentErrors.push('Email inválido');
+        if (!isValidLength(mensaje, 5, 1000)) currentErrors.push('Mensaje inválido');
+        if (telefono && !isValidLength(telefono, 7, 20)) currentErrors.push('Teléfono inválido');
+        if (currentErrors.length > 0) {
+            rowErrors.push(`Fila ${index + 1}: ${currentErrors.join(', ')}`);
+            return null;
+        }
+        return { nombre, email, telefono: telefono || null, producto, mensaje };
+    }).filter(Boolean);
+    if (rowErrors.length > 0) {
+        return res.status(400).json({ ok: false, message: 'Errores en el archivo.', errors: rowErrors });
+    }
+    if (validRows.length === 0) {
+        return res.status(400).json({ ok: false, message: 'No hay filas válidas para importar.' });
+    }
+    if (tipo === 'consultas') {
+        const values = validRows.map(row => [
+            row.nombre,
+            row.apellido,
+            row.producto,
+            row.tipoAsunto,
+            row.descripcion,
+            row.contacto,
+            row.email,
+            new Date()
+        ]);
+        return db.query(
+            'INSERT INTO consultas (nombre, apellido, producto, tipo_asunto, descripcion, contacto, email, fecha) VALUES ?',
+            [values],
+            (err) => {
+                if (err) {
+                    console.error('MySQL insert error (import consultas):', err);
+                    return res.status(500).json({ ok: false, message: 'Error al importar consultas.' });
+                }
+                db.query('INSERT INTO logs (username, action, details) VALUES (?, ?, ?)', [req.user?.username || 'import', 'import_excel', `Consultas: ${validRows.length}`], (logErr) => {
+                    if (logErr) console.error('Error guardando log de importación:', logErr);
+                });
+                return res.json({ ok: true, imported: validRows.length });
+            }
+        );
+    }
+    const values = validRows.map(row => [
+        row.nombre,
+        row.email,
+        row.telefono,
+        row.producto,
+        row.mensaje,
+        new Date()
+    ]);
+    return db.query(
+        'INSERT INTO correos (nombre, email, telefono, producto, mensaje, fecha) VALUES ?',
+        [values],
+        (err) => {
+            if (err) {
+                console.error('MySQL insert error (import contactos):', err);
+                return res.status(500).json({ ok: false, message: 'Error al importar contactos.' });
+            }
+            db.query('INSERT INTO logs (username, action, details) VALUES (?, ?, ?)', [req.user?.username || 'import', 'import_excel', `Contactos: ${validRows.length}`], (logErr) => {
+                if (logErr) console.error('Error guardando log de importación:', logErr);
+            });
+            return res.json({ ok: true, imported: validRows.length });
+        }
+    );
 });
 
 app.post('/consultas', [
